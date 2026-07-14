@@ -5,11 +5,20 @@ const { getProductById, loadProducts } = require("./catalog");
 const { GitHubApiError, getLatestBetaRelease, getLatestRelease } = require("./github");
 const { detectInstalledProduct } = require("./installStatus");
 const { installProductRelease } = require("./installer");
-const { cleanVersion, selectReleaseAsset } = require("./releasePlanner");
+const { cleanVersion, compareVersions, selectReleaseAsset } = require("./releasePlanner");
 
 let mainWindow = null;
 const RELEASE_CACHE_TTL_MS = 15 * 60 * 1000;
+const INSTALL_DETECTION_RETRIES = 12;
+const INSTALL_DETECTION_DELAY_MS = 1000;
 const releaseCache = new Map();
+
+// Waits between post-install scans without blocking the Electron process.
+function delay(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
 
 // Creates the main product manager window.
 function createWindow() {
@@ -171,6 +180,38 @@ function sendProductProgress(productId, payload) {
   }
 }
 
+// Rechecks Adobe extension folders after a script installer has been launched.
+async function detectInstalledProductAfterInstall(product, release, onStatus = () => {}) {
+  const targetVersion = cleanVersion(release.tagName);
+  let latestDetection = await detectInstalledProduct(product);
+
+  for (let attempt = 0; attempt < INSTALL_DETECTION_RETRIES; attempt += 1) {
+    if (
+      latestDetection.installedVersion &&
+      compareVersions(latestDetection.installedVersion, targetVersion) >= 0
+    ) {
+      return latestDetection;
+    }
+
+    onStatus({ stage: "detect", message: "Checking installed version..." });
+    await delay(INSTALL_DETECTION_DELAY_MS);
+    latestDetection = await detectInstalledProduct(product);
+  }
+
+  return latestDetection;
+}
+
+// Shows the target version when an automatic installer was launched but scanning lags behind.
+function createOptimisticInstalledState(product, release, detected) {
+  return {
+    installed: true,
+    installedPath: detected.installedPath,
+    installedVersion: cleanVersion(release.tagName),
+    pendingDetection: true,
+    productId: product.id
+  };
+}
+
 ipcMain.handle("products:list", async () => getProductsWithInstalledState());
 
 ipcMain.handle("products:refresh", async (_event, productId, options = {}) => {
@@ -203,7 +244,12 @@ ipcMain.handle("products:install", async (_event, productId, channel = "stable")
   const result = await installProductRelease(product, release, shell, (status) => {
     sendProductProgress(product.id, status);
   });
-  const installed = await detectInstalledProduct(product);
+  const detected = result.action === "script"
+    ? await detectInstalledProductAfterInstall(product, release, (status) => sendProductProgress(product.id, status))
+    : await detectInstalledProduct(product);
+  const installed = result.action === "script" && compareVersions(detected.installedVersion, release.tagName) < 0
+    ? createOptimisticInstalledState(product, release, detected)
+    : detected;
 
   return {
     ...result,

@@ -58,6 +58,22 @@ test("selectReleaseAsset prefers manual packages for manual products", () => {
   assert.equal(asset.name, "Plugin-1.0.0-macOS-Installer-arm64.pkg");
 });
 
+test("selectReleaseAsset chooses the YouTube Downloader manual beta asset for each platform", () => {
+  const assets = [
+    { name: "PremiereYouTubeDownloader-v2.7.21-macOS-Installer-arm64.pkg" },
+    { name: "PremiereYouTubeDownloader-v2.7.21-Windows-Full-Installer.exe" }
+  ];
+
+  assert.equal(
+    selectReleaseAsset(manualProduct, assets, "darwin").name,
+    "PremiereYouTubeDownloader-v2.7.21-macOS-Installer-arm64.pkg"
+  );
+  assert.equal(
+    selectReleaseAsset(manualProduct, assets, "win32").name,
+    "PremiereYouTubeDownloader-v2.7.21-Windows-Full-Installer.exe"
+  );
+});
+
 test("selectReleaseAsset falls back to zip archives when packages are not direct assets", () => {
   const asset = selectReleaseAsset(manualProduct, [
     { name: "Plugin-1.0.0.zip" }

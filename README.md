@@ -102,6 +102,11 @@ Use `installMode: "manual"` for products that should download a package such as 
 
 ## Changelog
 
+### 0.1.8 - 2026-07-14
+
+- Updated the installed version display after automatic script installs.
+- Confirmed manual beta downloads select the right installer for macOS and Windows.
+
 ### 0.1.7 - 2026-07-14
 
 - Reduced GitHub API calls by caching release checks and avoiding refreshes on product selection.
