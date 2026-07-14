@@ -274,20 +274,6 @@ ipcMain.handle("products:uninstall", async (_event, productId) => {
   };
 });
 
-ipcMain.handle("products:open-release", async (_event, url) => {
-  const adminState = await getAdminState(app.getPath("userData"));
-  if (!adminState.enabled) {
-    throw new Error("Admin mode is required to open release pages.");
-  }
-
-  if (!url || !String(url).startsWith("https://github.com/")) {
-    throw new Error("Invalid release URL.");
-  }
-
-  await shell.openExternal(url);
-  return true;
-});
-
 ipcMain.handle("admin:get-state", async () => getAdminState(app.getPath("userData")));
 
 ipcMain.handle("admin:enable", async (_event, password) => enableAdminMode(app.getPath("userData"), password));

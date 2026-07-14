@@ -47,10 +47,8 @@
 
         <div class="detail-actions">
           <button id="primaryAction" class="primary-action" type="button" disabled>Installer</button>
-          <button id="refreshSelectedButton" class="icon-action" type="button" title="Refresh selected product" aria-label="Refresh selected product">↻</button>
           <button id="uninstallAction" class="danger-action" type="button" disabled>Uninstall</button>
           <button id="betaAction" class="beta-action" type="button" hidden disabled>Beta</button>
-          <button id="releaseButton" class="secondary-action" type="button" disabled>Release</button>
         </div>
 
         <div class="version-row">
@@ -59,16 +57,16 @@
         </div>
 
         <div class="section-tabs">
-          <button class="section-tab active" type="button">Compatibility</button>
-          <button class="section-tab" type="button">Status</button>
+          <button class="section-tab active" type="button" data-detail-tab="compatibility">Compatibility</button>
+          <button class="section-tab" type="button" data-detail-tab="status">Status</button>
         </div>
 
-        <div class="compatibility">
+        <div class="detail-tab-panel compatibility" id="compatibilityPanel">
           <span class="app-chip" id="detailKind">CEP</span>
           <span id="detailCompatibility">Premiere Pro</span>
         </div>
 
-        <div class="status-card">
+        <div class="detail-tab-panel status-card" id="statusPanel" hidden>
           <div class="status-line">
             <span>Installed</span>
             <strong id="installedState">Unknown</strong>

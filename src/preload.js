@@ -6,7 +6,6 @@ contextBridge.exposeInMainWorld("pluginManager", {
   refreshProduct: (productId, options) => ipcRenderer.invoke("products:refresh", productId, options),
   installProduct: (productId, channel) => ipcRenderer.invoke("products:install", productId, channel),
   uninstallProduct: (productId) => ipcRenderer.invoke("products:uninstall", productId),
-  openRelease: (url) => ipcRenderer.invoke("products:open-release", url),
   getAdminState: () => ipcRenderer.invoke("admin:get-state"),
   enableAdmin: (password) => ipcRenderer.invoke("admin:enable", password),
   disableAdmin: () => ipcRenderer.invoke("admin:disable"),

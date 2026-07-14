@@ -4,6 +4,7 @@ const state = {
   selectedId: null,
   filter: "all",
   query: "",
+  detailTab: "compatibility",
   admin: {
     configured: false,
     enabled: false
@@ -22,10 +23,10 @@ const adminForm = document.getElementById("adminForm");
 const adminPasswordInput = document.getElementById("adminPasswordInput");
 const adminCancelButton = document.getElementById("adminCancelButton");
 const primaryAction = document.getElementById("primaryAction");
-const refreshSelectedButton = document.getElementById("refreshSelectedButton");
 const uninstallAction = document.getElementById("uninstallAction");
 const betaAction = document.getElementById("betaAction");
-const releaseButton = document.getElementById("releaseButton");
+const compatibilityPanel = document.getElementById("compatibilityPanel");
+const statusPanel = document.getElementById("statusPanel");
 const detailLogo = document.getElementById("detailLogo");
 const detailHost = document.getElementById("detailHost");
 const detailName = document.getElementById("detailName");
@@ -92,6 +93,19 @@ function hasStableUpdate(product) {
   const installedVersion = product.installed?.installedVersion;
 
   return Boolean(installedVersion && release?.version && compareVersions(installedVersion, release.version) < 0);
+}
+
+// Chooses the primary action label from the detected install and release state.
+function getPrimaryActionLabel(product) {
+  if (hasStableUpdate(product)) {
+    return "Update";
+  }
+
+  if (product.installed?.installed) {
+    return "Reinstall";
+  }
+
+  return "Install";
 }
 
 // Builds a short visual mark from the product name.
@@ -172,9 +186,9 @@ function renderDetails() {
 
   if (!product) {
     primaryAction.disabled = true;
-    refreshSelectedButton.disabled = true;
     uninstallAction.disabled = true;
-    releaseButton.disabled = true;
+    compatibilityPanel.hidden = true;
+    statusPanel.hidden = true;
     return;
   }
 
@@ -196,17 +210,19 @@ function renderDetails() {
   betaState.textContent = release?.beta?.version ? `v. ${release.beta.version}` : "-";
   betaLine.hidden = !state.admin.enabled;
 
-  primaryAction.textContent = product.installMode === "script" ? "Install" : "Download";
+  primaryAction.textContent = getPrimaryActionLabel(product);
   primaryAction.disabled = isBusy;
-  refreshSelectedButton.disabled = isBusy || state.refreshingProductIds.has(product.id);
   uninstallAction.disabled = isBusy || !product.installed?.installed;
   betaAction.hidden = !state.admin.enabled;
   betaAction.disabled = isBusy || !release?.beta;
   betaAction.textContent = product.installMode === "script" ? "Install Beta" : "Download Beta";
-  releaseButton.hidden = !state.admin.enabled;
-  releaseButton.disabled = !state.admin.enabled || !release?.htmlUrl;
   adminButton.classList.toggle("enabled", state.admin.enabled);
   adminButton.title = state.admin.enabled ? "Disable admin" : "Enable admin";
+  compatibilityPanel.hidden = state.detailTab !== "compatibility";
+  statusPanel.hidden = state.detailTab !== "status";
+  document.querySelectorAll(".section-tab").forEach((button) => {
+    button.classList.toggle("active", button.dataset.detailTab === state.detailTab);
+  });
 
   if (!isBusy && !statusMessage.textContent) {
     statusMessage.textContent = "Ready.";
@@ -227,6 +243,7 @@ async function refreshProduct(productId, options = {}) {
 
   try {
     if (!options.silent && productId === state.selectedId) {
+      state.detailTab = "status";
       statusMessage.textContent = "Checking latest release...";
     }
 
@@ -249,16 +266,6 @@ async function refreshProduct(productId, options = {}) {
   }
 }
 
-// Refreshes only the selected product instead of the full catalog.
-async function refreshSelectedProduct() {
-  const product = getSelectedProduct();
-  if (!product) {
-    return;
-  }
-
-  await refreshProduct(product.id, { force: true });
-}
-
 // Refreshes products one by one to avoid unnecessary concurrent GitHub calls.
 async function refreshAllProducts(options = {}) {
   for (const product of state.products) {
@@ -279,6 +286,7 @@ async function uninstallSelectedProduct() {
   }
 
   state.busyProductIds.add(product.id);
+  state.detailTab = "status";
   statusMessage.textContent = "Uninstalling plugin...";
   render();
 
@@ -302,6 +310,7 @@ async function installSelectedProduct(channel = "stable") {
   }
 
   state.busyProductIds.add(product.id);
+  state.detailTab = "status";
   const channelLabel = channel === "beta" ? "beta " : "";
   statusMessage.textContent = product.installMode === "script"
     ? `Preparing ${channelLabel}installer...`
@@ -337,6 +346,13 @@ function bindEvents() {
     render();
   });
 
+  document.querySelectorAll(".section-tab").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.detailTab = button.dataset.detailTab;
+      render();
+    });
+  });
+
   refreshAllButton.addEventListener("click", () => {
     refreshAllProducts({ force: true });
   });
@@ -345,23 +361,12 @@ function bindEvents() {
     installSelectedProduct();
   });
 
-  refreshSelectedButton.addEventListener("click", () => {
-    refreshSelectedProduct();
-  });
-
   uninstallAction.addEventListener("click", () => {
     uninstallSelectedProduct();
   });
 
   betaAction.addEventListener("click", () => {
     installSelectedProduct("beta");
-  });
-
-  releaseButton.addEventListener("click", () => {
-    const release = state.releases.get(state.selectedId);
-    if (release?.htmlUrl) {
-      window.pluginManager.openRelease(release.htmlUrl);
-    }
   });
 
   adminButton.addEventListener("click", () => {

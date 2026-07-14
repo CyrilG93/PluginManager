@@ -320,10 +320,11 @@ input {
 }
 
 .detail-actions {
-  display: flex;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
   gap: 10px;
-  min-height: 46px;
+  width: 100%;
+  min-height: 44px;
   padding: 16px 0 8px;
 }
 
@@ -331,13 +332,19 @@ input {
 .secondary-action,
 .beta-action,
 .danger-action {
-  min-width: 94px;
+  width: 100%;
+  min-width: 0;
   height: 34px;
   border: 0;
   border-radius: 5px;
   color: #fff;
   cursor: pointer;
+  font-size: 13px;
   font-weight: 700;
+  overflow: hidden;
+  padding: 0 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .primary-action {
@@ -364,23 +371,9 @@ input {
 .primary-action:disabled,
 .secondary-action:disabled,
 .beta-action:disabled,
-.danger-action:disabled,
-.icon-action:disabled {
+.danger-action:disabled {
   cursor: default;
   opacity: 0.42;
-}
-
-.icon-action {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  background: #303435;
-  color: var(--text);
-  cursor: pointer;
-  font-weight: 800;
 }
 
 .version-row {
@@ -406,6 +399,14 @@ input {
   height: 42px;
   margin-top: 10px;
   border-bottom: 1px solid var(--border);
+}
+
+.section-tab {
+  min-width: 0;
+}
+
+.detail-tab-panel {
+  min-width: 0;
 }
 
 .compatibility {

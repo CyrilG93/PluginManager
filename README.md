@@ -10,7 +10,7 @@ It reads the latest GitHub release for each product, then:
 - highlights products when a newer stable version is available
 - uninstalls detected CEP/UXP extension folders
 
-GitHub is checked at startup, when using the refresh button, and when an install needs release data that is not already cached.
+GitHub is checked at startup, when using the global refresh button, when refreshing one product with right-click, and when an install needs release data that is not already cached.
 
 ## Requirements
 
@@ -43,7 +43,7 @@ These launchers install missing Node dependencies before opening the app.
 
 ## Admin Mode
 
-Admin mode unlocks beta builds and GitHub release page shortcuts.
+Admin mode unlocks beta builds.
 
 Use the admin password to activate it on the current computer. After that, admin mode stays enabled locally and does not ask for the password again.
 
@@ -106,6 +106,13 @@ Use `installMode: "script"` for simple releases that contain a platform installe
 Use `installMode: "manual"` for products that should download a package such as `.pkg`, `.exe` or `.ccx`.
 
 ## Changelog
+
+### 0.1.10 - 2026-07-14
+
+- Simplified product action buttons so they fit inside the detail panel.
+- Changed the main action label to Install, Update or Reinstall depending on product state.
+- Removed the per-product refresh button and Release button.
+- Made Compatibility and Status tabs switch the visible detail panel.
 
 ### 0.1.9 - 2026-07-14
 
