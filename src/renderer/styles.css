@@ -329,7 +329,8 @@ input {
 
 .primary-action,
 .secondary-action,
-.beta-action {
+.beta-action,
+.danger-action {
   min-width: 94px;
   height: 34px;
   border: 0;
@@ -351,6 +352,10 @@ input {
   background: var(--purple);
 }
 
+.danger-action {
+  background: var(--danger);
+}
+
 .beta-action {
   background: var(--warning);
   color: #272219;
@@ -358,9 +363,24 @@ input {
 
 .primary-action:disabled,
 .secondary-action:disabled,
-.beta-action:disabled {
+.beta-action:disabled,
+.danger-action:disabled,
+.icon-action:disabled {
   cursor: default;
   opacity: 0.42;
+}
+
+.icon-action {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: #303435;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 800;
 }
 
 .version-row {

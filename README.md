@@ -8,6 +8,7 @@ It reads the latest GitHub release for each product, then:
 - downloads `.pkg`, `.exe`, `.ccx` or `.zxp` installers into `Downloads/Cyril Plugin Manager` for manual installation
 - detects installed CEP/UXP extensions when they are found in common Adobe extension folders
 - highlights products when a newer stable version is available
+- uninstalls detected CEP/UXP extension folders
 
 GitHub is checked at startup, when using the refresh button, and when an install needs release data that is not already cached.
 
@@ -45,6 +46,8 @@ These launchers install missing Node dependencies before opening the app.
 Admin mode unlocks beta builds and GitHub release page shortcuts.
 
 Use the admin password to activate it on the current computer. After that, admin mode stays enabled locally and does not ask for the password again.
+
+Click the Admin button again to disable Admin mode on the current computer.
 
 ## Beta Releases
 
@@ -97,10 +100,20 @@ GitHub Actions builds macOS `.dmg` and Windows `.exe` artifacts. Pushing a tag l
 
 Products are configured in `data/products.json`.
 
+Installed apps try to load the product catalog from the GitHub `main` branch first, then fall back to the bundled catalog if the computer is offline. This lets the product list change without asking users to reinstall Cyril Plugin Manager.
+
 Use `installMode: "script"` for simple releases that contain a platform installer script.
 Use `installMode: "manual"` for products that should download a package such as `.pkg`, `.exe` or `.ccx`.
 
 ## Changelog
+
+### 0.1.9 - 2026-07-14
+
+- Added uninstall for detected plugins.
+- Added single-product refresh from the selected product and product list right-click.
+- Allowed Admin mode to be disabled from the Admin button.
+- Moved the product list to a remote catalog with local fallback.
+- Removed Premiere Effect Analyzer from the product list.
 
 ### 0.1.8 - 2026-07-14
 

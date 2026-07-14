@@ -20,16 +20,6 @@
     "description": "Manages reusable Premiere Pro project databases."
   },
   {
-    "id": "premiere-effect-analyzer",
-    "name": "Premiere Effect Analyzer",
-    "repository": "CyrilG93/PremiereEffectAnalyzer",
-    "host": "Premiere Pro",
-    "kind": "CEP",
-    "installMode": "script",
-    "bundleIds": ["com.cyrilplugin.PremiereEffectAnalyzer"],
-    "description": "Inspects Premiere effects and match names."
-  },
-  {
     "id": "premiere-export-button",
     "name": "Premiere Export Button",
     "repository": "CyrilG93/PremiereExportButton",

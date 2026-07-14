@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
-const { enableAdminMode, getAdminState } = require("../src/adminState");
+const { disableAdminMode, enableAdminMode, getAdminState } = require("../src/adminState");
 
 test("enableAdminMode accepts the fixed admin password", async () => {
   const userDataPath = await fs.mkdtemp(path.join(os.tmpdir(), "cpm-admin-"));
@@ -26,4 +26,16 @@ test("enableAdminMode rejects incorrect admin passwords", async () => {
     () => enableAdminMode(userDataPath, "wrong"),
     /Incorrect admin password/
   );
+});
+
+test("disableAdminMode turns admin mode off", async () => {
+  const userDataPath = await fs.mkdtemp(path.join(os.tmpdir(), "cpm-admin-"));
+  await enableAdminMode(userDataPath, "Extron");
+
+  const state = await disableAdminMode(userDataPath);
+
+  assert.deepEqual(state, {
+    configured: true,
+    enabled: false
+  });
 });

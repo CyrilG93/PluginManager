@@ -22,6 +22,8 @@ const adminForm = document.getElementById("adminForm");
 const adminPasswordInput = document.getElementById("adminPasswordInput");
 const adminCancelButton = document.getElementById("adminCancelButton");
 const primaryAction = document.getElementById("primaryAction");
+const refreshSelectedButton = document.getElementById("refreshSelectedButton");
+const uninstallAction = document.getElementById("uninstallAction");
 const betaAction = document.getElementById("betaAction");
 const releaseButton = document.getElementById("releaseButton");
 const detailLogo = document.getElementById("detailLogo");
@@ -154,6 +156,11 @@ function renderProductList() {
       state.selectedId = product.id;
       render();
     });
+    row.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      state.selectedId = product.id;
+      refreshProduct(product.id, { force: true });
+    });
 
     productList.appendChild(row);
   }
@@ -165,6 +172,8 @@ function renderDetails() {
 
   if (!product) {
     primaryAction.disabled = true;
+    refreshSelectedButton.disabled = true;
+    uninstallAction.disabled = true;
     releaseButton.disabled = true;
     return;
   }
@@ -189,13 +198,15 @@ function renderDetails() {
 
   primaryAction.textContent = product.installMode === "script" ? "Install" : "Download";
   primaryAction.disabled = isBusy;
+  refreshSelectedButton.disabled = isBusy || state.refreshingProductIds.has(product.id);
+  uninstallAction.disabled = isBusy || !product.installed?.installed;
   betaAction.hidden = !state.admin.enabled;
   betaAction.disabled = isBusy || !release?.beta;
   betaAction.textContent = product.installMode === "script" ? "Install Beta" : "Download Beta";
   releaseButton.hidden = !state.admin.enabled;
   releaseButton.disabled = !state.admin.enabled || !release?.htmlUrl;
   adminButton.classList.toggle("enabled", state.admin.enabled);
-  adminButton.title = state.admin.enabled ? "Admin enabled" : "Enable admin";
+  adminButton.title = state.admin.enabled ? "Disable admin" : "Enable admin";
 
   if (!isBusy && !statusMessage.textContent) {
     statusMessage.textContent = "Ready.";
@@ -238,11 +249,48 @@ async function refreshProduct(productId, options = {}) {
   }
 }
 
+// Refreshes only the selected product instead of the full catalog.
+async function refreshSelectedProduct() {
+  const product = getSelectedProduct();
+  if (!product) {
+    return;
+  }
+
+  await refreshProduct(product.id, { force: true });
+}
+
 // Refreshes products one by one to avoid unnecessary concurrent GitHub calls.
 async function refreshAllProducts(options = {}) {
   for (const product of state.products) {
     await refreshProduct(product.id, options);
     await delay(120);
+  }
+}
+
+// Removes the selected installed plugin from detected Adobe extension folders.
+async function uninstallSelectedProduct() {
+  const product = getSelectedProduct();
+  if (!product || !product.installed?.installed) {
+    return;
+  }
+
+  if (!window.confirm(`Uninstall ${product.name}?`)) {
+    return;
+  }
+
+  state.busyProductIds.add(product.id);
+  statusMessage.textContent = "Uninstalling plugin...";
+  render();
+
+  try {
+    const result = await window.pluginManager.uninstallProduct(product.id);
+    product.installed = result.installed;
+    statusMessage.textContent = result.message;
+  } catch (error) {
+    statusMessage.textContent = error.message;
+  } finally {
+    state.busyProductIds.delete(product.id);
+    render();
   }
 }
 
@@ -297,6 +345,14 @@ function bindEvents() {
     installSelectedProduct();
   });
 
+  refreshSelectedButton.addEventListener("click", () => {
+    refreshSelectedProduct();
+  });
+
+  uninstallAction.addEventListener("click", () => {
+    uninstallSelectedProduct();
+  });
+
   betaAction.addEventListener("click", () => {
     installSelectedProduct("beta");
   });
@@ -309,6 +365,11 @@ function bindEvents() {
   });
 
   adminButton.addEventListener("click", () => {
+    if (state.admin.enabled) {
+      disableAdminMode();
+      return;
+    }
+
     openAdminModal();
   });
 
@@ -365,6 +426,23 @@ async function enableAdminMode(password) {
     closeAdminModal();
     statusMessage.textContent = "Admin mode enabled.";
     await refreshAllProducts({ silent: true });
+  } catch (error) {
+    statusMessage.textContent = error.message;
+  } finally {
+    render();
+  }
+}
+
+// Disables admin mode locally and hides beta-only release data from the UI.
+async function disableAdminMode() {
+  try {
+    state.admin = await window.pluginManager.disableAdmin();
+    for (const release of state.releases.values()) {
+      if (release) {
+        release.beta = null;
+      }
+    }
+    statusMessage.textContent = "Admin mode disabled.";
   } catch (error) {
     statusMessage.textContent = error.message;
   } finally {

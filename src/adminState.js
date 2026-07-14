@@ -50,8 +50,21 @@ async function enableAdminMode(userDataPath, password) {
   return getAdminState(userDataPath);
 }
 
+// Disables local admin mode without deleting the saved state file.
+async function disableAdminMode(userDataPath) {
+  const existingState = await readAdminFile(userDataPath);
+  await writeAdminFile(userDataPath, {
+    ...existingState,
+    enabled: false,
+    disabledAt: new Date().toISOString()
+  });
+
+  return getAdminState(userDataPath);
+}
+
 module.exports = {
   ADMIN_PASSWORD,
+  disableAdminMode,
   enableAdminMode,
   getAdminState
 };

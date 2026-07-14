@@ -1,11 +1,12 @@
 const path = require("node:path");
 const { app, BrowserWindow, ipcMain, shell } = require("electron");
-const { enableAdminMode, getAdminState } = require("./adminState");
+const { disableAdminMode, enableAdminMode, getAdminState } = require("./adminState");
 const { getProductById, loadProducts } = require("./catalog");
 const { GitHubApiError, getLatestBetaRelease, getLatestRelease } = require("./github");
 const { detectInstalledProduct } = require("./installStatus");
 const { installProductRelease } = require("./installer");
 const { cleanVersion, compareVersions, selectReleaseAsset } = require("./releasePlanner");
+const { uninstallProduct } = require("./uninstaller");
 
 let mainWindow = null;
 const RELEASE_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -258,6 +259,21 @@ ipcMain.handle("products:install", async (_event, productId, channel = "stable")
   };
 });
 
+ipcMain.handle("products:uninstall", async (_event, productId) => {
+  const product = await getProductById(productId);
+  if (!product) {
+    throw new Error("Unknown product.");
+  }
+
+  const result = await uninstallProduct(product);
+  releaseCache.delete(product.id);
+
+  return {
+    ...result,
+    message: result.removed.length > 0 ? "Plugin uninstalled." : "No installed copy was detected."
+  };
+});
+
 ipcMain.handle("products:open-release", async (_event, url) => {
   const adminState = await getAdminState(app.getPath("userData"));
   if (!adminState.enabled) {
@@ -275,6 +291,8 @@ ipcMain.handle("products:open-release", async (_event, url) => {
 ipcMain.handle("admin:get-state", async () => getAdminState(app.getPath("userData")));
 
 ipcMain.handle("admin:enable", async (_event, password) => enableAdminMode(app.getPath("userData"), password));
+
+ipcMain.handle("admin:disable", async () => disableAdminMode(app.getPath("userData")));
 
 app.whenReady().then(() => {
   createWindow();

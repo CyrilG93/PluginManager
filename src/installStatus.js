@@ -102,11 +102,11 @@ function selectBestInstalledMatch(matches) {
   })[0] || null;
 }
 
-// Returns the newest installed location found for one product.
-async function detectInstalledProduct(product, platform = process.platform) {
+// Finds every installed location that matches one product.
+async function findInstalledProductMatches(product, platform = process.platform, roots = getAdobeExtensionRoots(platform)) {
   const matches = [];
 
-  for (const root of getAdobeExtensionRoots(platform)) {
+  for (const root of roots) {
     let entries = [];
     try {
       entries = await fs.readdir(root, { withFileTypes: true });
@@ -130,6 +130,12 @@ async function detectInstalledProduct(product, platform = process.platform) {
     }
   }
 
+  return matches;
+}
+
+// Returns the newest installed location found for one product.
+async function detectInstalledProduct(product, platform = process.platform) {
+  const matches = await findInstalledProductMatches(product, platform);
   const bestMatch = selectBestInstalledMatch(matches);
   if (bestMatch) {
     return bestMatch;
@@ -144,6 +150,7 @@ async function detectInstalledProduct(product, platform = process.platform) {
 
 module.exports = {
   detectInstalledProduct,
+  findInstalledProductMatches,
   getAdobeExtensionRoots,
   selectBestInstalledMatch
 };
