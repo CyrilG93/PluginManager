@@ -23,6 +23,36 @@ function cleanVersion(version) {
   return String(version || "").replace(/^v/i, "");
 }
 
+// Converts a version string to numeric parts for simple release comparisons.
+function versionParts(version) {
+  return cleanVersion(version)
+    .split(/[^0-9]+/)
+    .filter(Boolean)
+    .map((part) => Number(part));
+}
+
+// Compares dotted numeric versions and ignores suffixes like beta or rc.
+function compareVersions(leftVersion, rightVersion) {
+  const leftParts = versionParts(leftVersion);
+  const rightParts = versionParts(rightVersion);
+  const maxLength = Math.max(leftParts.length, rightParts.length);
+
+  for (let index = 0; index < maxLength; index += 1) {
+    const left = leftParts[index] || 0;
+    const right = rightParts[index] || 0;
+
+    if (left > right) {
+      return 1;
+    }
+
+    if (left < right) {
+      return -1;
+    }
+  }
+
+  return 0;
+}
+
 // Classifies a release file by extension so install planning stays predictable.
 function classifyFile(fileName) {
   const lowerName = fileName.toLowerCase();
@@ -135,6 +165,7 @@ function planInstallFromFiles(product, files, platform = process.platform) {
 module.exports = {
   classifyFile,
   cleanVersion,
+  compareVersions,
   normalizePlatform,
   planInstallFromFiles,
   selectReleaseAsset

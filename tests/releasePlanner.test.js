@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const {
   classifyFile,
   cleanVersion,
+  compareVersions,
   planInstallFromFiles,
   selectReleaseAsset
 } = require("../src/releasePlanner");
@@ -29,6 +30,13 @@ test("classifyFile detects supported release file types", () => {
 test("cleanVersion removes the GitHub v prefix", () => {
   assert.equal(cleanVersion("v1.2.3"), "1.2.3");
   assert.equal(cleanVersion("1.2.3"), "1.2.3");
+});
+
+test("compareVersions compares dotted versions", () => {
+  assert.equal(compareVersions("1.2.0", "1.2.1"), -1);
+  assert.equal(compareVersions("1.10.0", "1.9.9"), 1);
+  assert.equal(compareVersions("v2.0.0-beta.1", "2.0.0"), 1);
+  assert.equal(compareVersions("1.2", "1.2.0"), 0);
 });
 
 test("selectReleaseAsset prefers script releases for script products", () => {

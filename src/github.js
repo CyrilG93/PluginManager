@@ -83,12 +83,19 @@ async function githubJsonWithFallback(endpoint) {
 // Fetches the latest release metadata for a configured product repository.
 async function getLatestRelease(product) {
   const release = await githubJsonWithFallback(`/repos/${product.repository}/releases/latest`);
+  return normalizeRelease(release);
+}
+
+// Normalizes GitHub release metadata for stable and beta channels.
+function normalizeRelease(release) {
   return {
     id: release.id,
     tagName: release.tag_name,
     name: release.name || release.tag_name,
     htmlUrl: release.html_url,
     publishedAt: release.published_at,
+    prerelease: Boolean(release.prerelease),
+    draft: Boolean(release.draft),
     assets: (release.assets || []).map((asset) => ({
       id: asset.id,
       name: asset.name,
@@ -97,6 +104,28 @@ async function getLatestRelease(product) {
       browserDownloadUrl: asset.browser_download_url
     }))
   };
+}
+
+// Checks whether a release should be exposed as an admin beta build.
+function isBetaRelease(release) {
+  const label = `${release.tag_name || ""} ${release.name || ""}`.toLowerCase();
+  return Boolean(release.prerelease || label.match(/\b(beta|alpha|dev|preview|rc)\b/));
+}
+
+// Fetches recent releases so admin mode can expose prerelease/beta builds.
+async function getReleases(product) {
+  const releases = await githubJsonWithFallback(`/repos/${product.repository}/releases?per_page=20`);
+  return releases.map(normalizeRelease);
+}
+
+// Returns the newest beta-like release for a product, or null when none exists.
+async function getLatestBetaRelease(product) {
+  const releases = await getReleases(product);
+  return releases.find((release) => isBetaRelease({
+    tag_name: release.tagName,
+    name: release.name,
+    prerelease: release.prerelease
+  })) || null;
 }
 
 // Downloads an asset with gh when fetch cannot use the local TLS chain.
@@ -197,5 +226,6 @@ async function downloadAsset(asset, destinationPath, onProgress = () => {}) {
 module.exports = {
   downloadAsset,
   getGitHubToken,
+  getLatestBetaRelease,
   getLatestRelease
 };

@@ -6,11 +6,12 @@
   --border: #47413d;
   --text: #ece8df;
   --muted: #a8a19a;
-  --accent: #ff6a00;
-  --accent-strong: #ff7d1a;
+  --accent: #2bb8a8;
+  --accent-strong: #38cdbc;
   --teal: #34c9b6;
   --purple: #8a6fd1;
-  --danger: #f05d5e;
+  --warning: #e9c25a;
+  --danger: #df6b6f;
   --success: #73d483;
   --shadow: rgba(0, 0, 0, 0.28);
 }
@@ -56,13 +57,6 @@ input {
   border-right: 1px solid #121416;
 }
 
-.window-mark {
-  width: 38px;
-  height: 12px;
-  border-radius: 8px;
-  background: linear-gradient(90deg, #ff5f57 0 30%, #febc2e 30% 63%, #28c840 63%);
-}
-
 .icon-button {
   display: grid;
   place-items: center;
@@ -79,6 +73,11 @@ input {
 .icon-button.active {
   background: #34383b;
   color: var(--text);
+}
+
+.admin-button.enabled {
+  background: rgba(43, 184, 168, 0.18);
+  color: var(--accent-strong);
 }
 
 .product-pane {
@@ -169,6 +168,7 @@ input {
   margin: 2px 0;
   padding: 8px 12px;
   border: 0;
+  border-left: 3px solid transparent;
   border-radius: 6px;
   background: transparent;
   color: var(--text);
@@ -186,7 +186,17 @@ input {
 
 .product-row.active {
   background: var(--accent);
-  color: #fff;
+  color: #071615;
+}
+
+.product-row.update-available:not(.active) {
+  border-left-color: var(--warning);
+  background: rgba(233, 194, 90, 0.11);
+}
+
+.product-row.update-available .version-cell.latest {
+  color: var(--warning);
+  font-weight: 800;
 }
 
 .product-title {
@@ -206,6 +216,20 @@ input {
   border-radius: 999px;
   border: 2px solid currentColor;
   font-size: 12px;
+}
+
+.update-pill {
+  display: inline-grid;
+  place-items: center;
+  min-width: 58px;
+  height: 20px;
+  margin-left: 8px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(233, 194, 90, 0.18);
+  color: var(--warning);
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .product-name {
@@ -276,7 +300,8 @@ input {
 }
 
 .primary-action,
-.secondary-action {
+.secondary-action,
+.beta-action {
   min-width: 94px;
   height: 34px;
   border: 0;
@@ -298,8 +323,14 @@ input {
   background: var(--purple);
 }
 
+.beta-action {
+  background: var(--warning);
+  color: #272219;
+}
+
 .primary-action:disabled,
-.secondary-action:disabled {
+.secondary-action:disabled,
+.beta-action:disabled {
   cursor: default;
   opacity: 0.42;
 }

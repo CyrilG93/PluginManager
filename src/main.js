@@ -1,7 +1,8 @@
 const path = require("node:path");
 const { app, BrowserWindow, ipcMain, shell } = require("electron");
+const { enableAdminMode, getAdminState } = require("./adminState");
 const { getProductById, loadProducts } = require("./catalog");
-const { getLatestRelease } = require("./github");
+const { getLatestBetaRelease, getLatestRelease } = require("./github");
 const { detectInstalledProduct } = require("./installStatus");
 const { installProductRelease } = require("./installer");
 const { cleanVersion, selectReleaseAsset } = require("./releasePlanner");
@@ -36,9 +37,8 @@ async function getProductsWithInstalledState() {
   })));
 }
 
-// Fetches latest GitHub release state for one product.
-async function getProductReleaseState(product) {
-  const release = await getLatestRelease(product);
+// Converts a GitHub release into the compact shape consumed by the renderer.
+function normalizeReleaseState(product, release) {
   const selectedAsset = selectReleaseAsset(product, release.assets, process.platform);
 
   return {
@@ -52,6 +52,22 @@ async function getProductReleaseState(product) {
   };
 }
 
+// Fetches stable and optional beta release state for one product.
+async function getProductReleaseState(product, options = {}) {
+  const release = await getLatestRelease(product);
+  const releaseState = normalizeReleaseState(product, release);
+
+  if (!options.includeBeta) {
+    return releaseState;
+  }
+
+  const betaRelease = await getLatestBetaRelease(product);
+  return {
+    ...releaseState,
+    beta: betaRelease ? normalizeReleaseState(product, betaRelease) : null
+  };
+}
+
 // Sends progress updates to the renderer for one product action.
 function sendProductProgress(productId, payload) {
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -61,22 +77,34 @@ function sendProductProgress(productId, payload) {
 
 ipcMain.handle("products:list", async () => getProductsWithInstalledState());
 
-ipcMain.handle("products:refresh", async (_event, productId) => {
+ipcMain.handle("products:refresh", async (_event, productId, options = {}) => {
   const product = await getProductById(productId);
   if (!product) {
     throw new Error("Unknown product.");
   }
 
-  return getProductReleaseState(product);
+  const adminState = await getAdminState(app.getPath("userData"));
+  return getProductReleaseState(product, {
+    includeBeta: Boolean(options.includeBeta && adminState.enabled)
+  });
 });
 
-ipcMain.handle("products:install", async (_event, productId) => {
+ipcMain.handle("products:install", async (_event, productId, channel = "stable") => {
   const product = await getProductById(productId);
   if (!product) {
     throw new Error("Unknown product.");
   }
 
-  const release = await getLatestRelease(product);
+  const adminState = await getAdminState(app.getPath("userData"));
+  if (channel === "beta" && !adminState.enabled) {
+    throw new Error("Admin mode is required for beta installs.");
+  }
+
+  const release = channel === "beta" ? await getLatestBetaRelease(product) : await getLatestRelease(product);
+  if (!release) {
+    throw new Error("No beta release is available for this product.");
+  }
+
   const result = await installProductRelease(product, release, shell, (status) => {
     sendProductProgress(product.id, status);
   });
@@ -84,12 +112,17 @@ ipcMain.handle("products:install", async (_event, productId) => {
 
   return {
     ...result,
-    release: await getProductReleaseState(product),
+    release: await getProductReleaseState(product, { includeBeta: adminState.enabled }),
     installed
   };
 });
 
 ipcMain.handle("products:open-release", async (_event, url) => {
+  const adminState = await getAdminState(app.getPath("userData"));
+  if (!adminState.enabled) {
+    throw new Error("Admin mode is required to open release pages.");
+  }
+
   if (!url || !String(url).startsWith("https://github.com/")) {
     throw new Error("Invalid release URL.");
   }
@@ -97,6 +130,10 @@ ipcMain.handle("products:open-release", async (_event, url) => {
   await shell.openExternal(url);
   return true;
 });
+
+ipcMain.handle("admin:get-state", async () => getAdminState(app.getPath("userData")));
+
+ipcMain.handle("admin:enable", async (_event, password) => enableAdminMode(app.getPath("userData"), password));
 
 app.whenReady().then(() => {
   createWindow();
