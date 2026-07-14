@@ -36,6 +36,13 @@ const betaLine = document.getElementById("betaLine");
 const betaState = document.getElementById("betaState");
 const statusMessage = document.getElementById("statusMessage");
 
+// Waits between release checks so startup does not burst GitHub API requests.
+function delay(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
 // Formats release tags and missing values for compact table cells.
 function formatValue(value) {
   return value || "-";
@@ -146,9 +153,6 @@ function renderProductList() {
     row.addEventListener("click", () => {
       state.selectedId = product.id;
       render();
-      if (!state.releases.has(product.id)) {
-        refreshProduct(product.id);
-      }
     });
 
     productList.appendChild(row);
@@ -216,7 +220,8 @@ async function refreshProduct(productId, options = {}) {
     }
 
     const release = await window.pluginManager.refreshProduct(productId, {
-      includeBeta: state.admin.enabled
+      includeBeta: state.admin.enabled,
+      force: Boolean(options.force)
     });
     state.releases.set(productId, release);
 
@@ -233,9 +238,12 @@ async function refreshProduct(productId, options = {}) {
   }
 }
 
-// Refreshes products one by one to keep the UI responsive.
+// Refreshes products one by one to avoid unnecessary concurrent GitHub calls.
 async function refreshAllProducts(options = {}) {
-  await Promise.allSettled(state.products.map((product) => refreshProduct(product.id, options)));
+  for (const product of state.products) {
+    await refreshProduct(product.id, options);
+    await delay(120);
+  }
 }
 
 // Installs or downloads the selected product release.
@@ -282,7 +290,7 @@ function bindEvents() {
   });
 
   refreshAllButton.addEventListener("click", () => {
-    refreshAllProducts();
+    refreshAllProducts({ force: true });
   });
 
   primaryAction.addEventListener("click", () => {

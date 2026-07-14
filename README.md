@@ -9,6 +9,8 @@ It reads the latest GitHub release for each product, then:
 - detects installed CEP/UXP extensions when they are found in common Adobe extension folders
 - highlights products when a newer stable version is available
 
+GitHub is checked at startup, when using the refresh button, and when an install needs release data that is not already cached.
+
 ## Requirements
 
 - macOS or Windows
@@ -99,6 +101,12 @@ Use `installMode: "script"` for simple releases that contain a platform installe
 Use `installMode: "manual"` for products that should download a package such as `.pkg`, `.exe` or `.ccx`.
 
 ## Changelog
+
+### 0.1.7 - 2026-07-14
+
+- Reduced GitHub API calls by caching release checks and avoiding refreshes on product selection.
+- Replaced raw GitHub 404/403 messages with clear user-facing status messages.
+- Hid beta-only details unless Admin mode is enabled.
 
 ### 0.1.6 - 2026-07-14
 

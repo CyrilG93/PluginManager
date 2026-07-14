@@ -20,6 +20,11 @@
   box-sizing: border-box;
 }
 
+/* Keeps hidden admin-only controls hidden even when component classes set display. */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   width: 100%;

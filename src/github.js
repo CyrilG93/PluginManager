@@ -7,6 +7,36 @@ const { Readable } = require("node:stream");
 const GITHUB_API_BASE = "https://api.github.com";
 const USER_AGENT = "CyrilPluginManager/0.1";
 
+class GitHubApiError extends Error {
+  // Keeps GitHub response metadata available without exposing raw JSON in the UI.
+  constructor(status, body, response) {
+    super(formatGitHubApiError(status, body, response));
+    this.name = "GitHubApiError";
+    this.status = status;
+    this.body = body;
+    this.rateLimitReset = response.headers.get("x-ratelimit-reset") || "";
+    this.retryAfter = response.headers.get("retry-after") || "";
+  }
+}
+
+// Converts GitHub API failures into short user-facing messages.
+function formatGitHubApiError(status, body, response) {
+  if (status === 403 || status === 429) {
+    const reset = response.headers.get("x-ratelimit-reset");
+    const resetDate = reset ? new Date(Number(reset) * 1000) : null;
+    const resetLabel = resetDate && !Number.isNaN(resetDate.getTime())
+      ? ` Try again after ${resetDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`
+      : "";
+    return `GitHub API rate limit reached.${resetLabel}`;
+  }
+
+  if (status === 404) {
+    return "No public GitHub release was found for this product.";
+  }
+
+  return `GitHub API ${status}: ${body || response.statusText}`;
+}
+
 // Returns the optional GitHub token used for private release testing.
 function getGitHubToken() {
   return process.env.CYRIL_PLUGIN_MANAGER_GITHUB_TOKEN || process.env.GITHUB_TOKEN || "";
@@ -60,7 +90,7 @@ async function githubJson(endpoint) {
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`GitHub API ${response.status}: ${body || response.statusText}`);
+    throw new GitHubApiError(response.status, body, response);
   }
 
   return response.json();
@@ -220,6 +250,7 @@ async function downloadAsset(asset, destinationPath, onProgress = () => {}) {
 
 module.exports = {
   downloadAsset,
+  GitHubApiError,
   getGitHubToken,
   getLatestBetaRelease,
   getLatestRelease,

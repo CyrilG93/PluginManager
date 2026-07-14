@@ -2,12 +2,14 @@ const path = require("node:path");
 const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const { enableAdminMode, getAdminState } = require("./adminState");
 const { getProductById, loadProducts } = require("./catalog");
-const { getLatestBetaRelease, getLatestRelease } = require("./github");
+const { GitHubApiError, getLatestBetaRelease, getLatestRelease } = require("./github");
 const { detectInstalledProduct } = require("./installStatus");
 const { installProductRelease } = require("./installer");
 const { cleanVersion, selectReleaseAsset } = require("./releasePlanner");
 
 let mainWindow = null;
+const RELEASE_CACHE_TTL_MS = 15 * 60 * 1000;
+const releaseCache = new Map();
 
 // Creates the main product manager window.
 function createWindow() {
@@ -52,20 +54,114 @@ function normalizeReleaseState(product, release) {
   };
 }
 
+// Builds a stable empty state for products without a usable public release.
+function createUnavailableReleaseState(reason) {
+  return {
+    tagName: null,
+    version: null,
+    name: null,
+    publishedAt: null,
+    htmlUrl: null,
+    assets: [],
+    selectedAssetName: null,
+    unavailableReason: reason
+  };
+}
+
+// Checks whether cached release data can be reused for refresh-free actions.
+function isReleaseCacheFresh(entry) {
+  return Boolean(entry && Date.now() - entry.fetchedAt < RELEASE_CACHE_TTL_MS);
+}
+
+// Fetches the stable release and turns missing releases into a non-blocking state.
+async function fetchStableReleaseState(product) {
+  try {
+    const release = await getLatestRelease(product);
+    return {
+      release,
+      state: normalizeReleaseState(product, release)
+    };
+  } catch (error) {
+    if (error instanceof GitHubApiError && error.status === 404) {
+      return {
+        release: null,
+        state: createUnavailableReleaseState(error.message)
+      };
+    }
+
+    throw error;
+  }
+}
+
+// Fetches the latest admin beta release without treating a missing release as fatal.
+async function fetchBetaReleaseState(product) {
+  try {
+    const release = await getLatestBetaRelease(product);
+    return {
+      release,
+      state: release ? normalizeReleaseState(product, release) : null
+    };
+  } catch (error) {
+    if (error instanceof GitHubApiError && error.status === 404) {
+      return {
+        release: null,
+        state: null
+      };
+    }
+
+    throw error;
+  }
+}
+
 // Fetches stable and optional beta release state for one product.
 async function getProductReleaseState(product, options = {}) {
-  const release = await getLatestRelease(product);
-  const releaseState = normalizeReleaseState(product, release);
+  const includeBeta = Boolean(options.includeBeta);
+  const force = Boolean(options.force);
+  let cached = releaseCache.get(product.id);
 
-  if (!options.includeBeta) {
-    return releaseState;
+  if (force || !isReleaseCacheFresh(cached)) {
+    const stable = await fetchStableReleaseState(product);
+    cached = {
+      fetchedAt: Date.now(),
+      stableRelease: stable.release,
+      stableState: stable.state,
+      betaFetched: false,
+      betaRelease: null,
+      betaState: null
+    };
+    releaseCache.set(product.id, cached);
   }
 
-  const betaRelease = await getLatestBetaRelease(product);
+  if (!includeBeta) {
+    return cached.stableState;
+  }
+
+  if (force || !cached.betaFetched) {
+    const beta = await fetchBetaReleaseState(product);
+    cached.betaFetched = true;
+    cached.betaRelease = beta.release;
+    cached.betaState = beta.state;
+  }
+
   return {
-    ...releaseState,
-    beta: betaRelease ? normalizeReleaseState(product, betaRelease) : null
+    ...cached.stableState,
+    beta: cached.betaState
   };
+}
+
+// Returns the cached release object needed for downloads, fetching only when required.
+async function getInstallRelease(product, channel, includeBeta) {
+  await getProductReleaseState(product, { includeBeta });
+
+  const cached = releaseCache.get(product.id);
+  const release = channel === "beta" ? cached?.betaRelease : cached?.stableRelease;
+  if (release) {
+    return release;
+  }
+
+  throw new Error(channel === "beta"
+    ? "No beta release is available for this product."
+    : cached?.stableState?.unavailableReason || "No public GitHub release is available for this product.");
 }
 
 // Sends progress updates to the renderer for one product action.
@@ -85,7 +181,8 @@ ipcMain.handle("products:refresh", async (_event, productId, options = {}) => {
 
   const adminState = await getAdminState(app.getPath("userData"));
   return getProductReleaseState(product, {
-    includeBeta: Boolean(options.includeBeta && adminState.enabled)
+    includeBeta: Boolean(options.includeBeta && adminState.enabled),
+    force: Boolean(options.force)
   });
 });
 
@@ -100,10 +197,8 @@ ipcMain.handle("products:install", async (_event, productId, channel = "stable")
     throw new Error("Admin mode is required for beta installs.");
   }
 
-  const release = channel === "beta" ? await getLatestBetaRelease(product) : await getLatestRelease(product);
-  if (!release) {
-    throw new Error("No beta release is available for this product.");
-  }
+  const includeBeta = Boolean(adminState.enabled);
+  const release = await getInstallRelease(product, channel, includeBeta);
 
   const result = await installProductRelease(product, release, shell, (status) => {
     sendProductProgress(product.id, status);
@@ -112,7 +207,7 @@ ipcMain.handle("products:install", async (_event, productId, channel = "stable")
 
   return {
     ...result,
-    release: await getProductReleaseState(product, { includeBeta: adminState.enabled }),
+    release: await getProductReleaseState(product, { includeBeta }),
     installed
   };
 });
