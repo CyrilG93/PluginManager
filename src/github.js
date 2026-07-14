@@ -108,8 +108,7 @@ function normalizeRelease(release) {
 
 // Checks whether a release should be exposed as an admin beta build.
 function isBetaRelease(release) {
-  const label = `${release.tag_name || ""} ${release.name || ""}`.toLowerCase();
-  return Boolean(release.prerelease || label.match(/\b(beta|alpha|dev|preview|rc)\b/));
+  return Boolean(release.prerelease && !release.draft);
 }
 
 // Fetches recent releases so admin mode can expose prerelease/beta builds.
@@ -121,11 +120,7 @@ async function getReleases(product) {
 // Returns the newest beta-like release for a product, or null when none exists.
 async function getLatestBetaRelease(product) {
   const releases = await getReleases(product);
-  return releases.find((release) => isBetaRelease({
-    tag_name: release.tagName,
-    name: release.name,
-    prerelease: release.prerelease
-  })) || null;
+  return releases.find((release) => isBetaRelease(release)) || null;
 }
 
 // Downloads an asset with gh when fetch cannot use the local TLS chain.
@@ -227,5 +222,6 @@ module.exports = {
   downloadAsset,
   getGitHubToken,
   getLatestBetaRelease,
-  getLatestRelease
+  getLatestRelease,
+  isBetaRelease
 };

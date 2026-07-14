@@ -32,6 +32,19 @@ Admin mode unlocks beta builds and GitHub release page shortcuts.
 
 Use the admin password to activate it on the current computer. After that, admin mode stays enabled locally and does not ask for the password again.
 
+## Beta Releases
+
+Beta builds must be published as GitHub Releases marked `Set as a pre-release`.
+
+The manager does not build extensions from repository source files. It downloads release assets only, just like stable installs. This keeps beta installation consistent with normal releases and avoids accidental installs from incomplete development files.
+
+Recommended beta workflow:
+
+- publish a GitHub pre-release such as `v1.2.3-beta.1`
+- attach the same kind of install asset as stable releases: `.zip`, `.pkg`, `.exe`, `.ccx` or `.zxp`
+- keep draft releases private until the install asset is ready
+- promote the same packaged build to a normal release when it is validated
+
 ## Development
 
 Install dependencies:
@@ -60,6 +73,12 @@ Use `installMode: "script"` for simple releases that contain a platform installe
 Use `installMode: "manual"` for products that should download a package such as `.pkg`, `.exe` or `.ccx`.
 
 ## Changelog
+
+### 0.1.4 - 2026-07-14
+
+- Added an Admin-only Beta version column.
+- Changed beta detection to use only GitHub releases marked as pre-releases.
+- Documented the recommended beta release workflow.
 
 ### 0.1.3 - 2026-07-14
 

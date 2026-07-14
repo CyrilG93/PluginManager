@@ -13,6 +13,7 @@ const state = {
 };
 
 const productList = document.getElementById("productList");
+const productTableHead = document.getElementById("productTableHead");
 const searchInput = document.getElementById("searchInput");
 const refreshAllButton = document.getElementById("refreshAllButton");
 const adminButton = document.getElementById("adminButton");
@@ -109,6 +110,7 @@ function getVisibleProducts() {
 function renderProductList() {
   const visibleProducts = getVisibleProducts();
   productList.innerHTML = "";
+  productTableHead.classList.toggle("admin", state.admin.enabled);
 
   for (const product of visibleProducts) {
     const release = state.releases.get(product.id);
@@ -119,13 +121,16 @@ function renderProductList() {
     row.type = "button";
     row.className = [
       "product-row",
+      state.admin.enabled ? "admin" : "",
       product.id === state.selectedId ? "active" : "",
-      updateAvailable ? "update-available" : ""
+      updateAvailable ? "update-available" : "",
+      release?.beta ? "has-beta" : ""
     ].filter(Boolean).join(" ");
     row.dataset.productId = product.id;
 
     const icon = product.installMode === "script" ? "↑" : "↓";
     const latestLabel = isRefreshing ? "..." : formatValue(release?.version);
+    const betaLabel = isRefreshing ? "..." : formatValue(release?.beta?.version);
     const updateBadge = updateAvailable ? "<span class=\"update-pill\">Update</span>" : "";
     row.innerHTML = `
       <span class="product-title">
@@ -135,6 +140,7 @@ function renderProductList() {
       </span>
       <span class="version-cell">${formatValue(installedVersion)}</span>
       <span class="version-cell latest">${latestLabel}</span>
+      <span class="version-cell beta beta-column">${betaLabel}</span>
     `;
 
     row.addEventListener("click", () => {

@@ -149,6 +149,20 @@ input {
   gap: 12px;
 }
 
+.table-head.admin,
+.product-row.admin {
+  grid-template-columns: minmax(210px, 1fr) 86px 86px 86px;
+}
+
+.beta-column {
+  display: none;
+}
+
+.table-head.admin .beta-column,
+.product-row.admin .beta-column {
+  display: block;
+}
+
 .table-head {
   height: 24px;
   padding: 0 14px;
@@ -196,6 +210,15 @@ input {
 
 .product-row.update-available .version-cell.latest {
   color: var(--warning);
+  font-weight: 800;
+}
+
+.product-row .version-cell.beta {
+  color: var(--muted);
+}
+
+.product-row.has-beta .version-cell.beta {
+  color: var(--accent-strong);
   font-weight: 800;
 }
 
