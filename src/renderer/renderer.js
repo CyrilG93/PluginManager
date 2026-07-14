@@ -16,6 +16,10 @@ const productList = document.getElementById("productList");
 const searchInput = document.getElementById("searchInput");
 const refreshAllButton = document.getElementById("refreshAllButton");
 const adminButton = document.getElementById("adminButton");
+const adminModal = document.getElementById("adminModal");
+const adminForm = document.getElementById("adminForm");
+const adminPasswordInput = document.getElementById("adminPasswordInput");
+const adminCancelButton = document.getElementById("adminCancelButton");
 const primaryAction = document.getElementById("primaryAction");
 const betaAction = document.getElementById("betaAction");
 const releaseButton = document.getElementById("releaseButton");
@@ -291,7 +295,22 @@ function bindEvents() {
   });
 
   adminButton.addEventListener("click", () => {
-    enableAdminMode();
+    openAdminModal();
+  });
+
+  adminCancelButton.addEventListener("click", () => {
+    closeAdminModal();
+  });
+
+  adminModal.addEventListener("click", (event) => {
+    if (event.target === adminModal) {
+      closeAdminModal();
+    }
+  });
+
+  adminForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    enableAdminMode(adminPasswordInput.value);
   });
 
   window.pluginManager.onProductProgress((payload) => {
@@ -307,24 +326,29 @@ function bindEvents() {
   });
 }
 
-// Prompts once for admin setup/unlock and then keeps the mode enabled locally.
-async function enableAdminMode() {
+// Opens the local admin unlock modal.
+function openAdminModal() {
   if (state.admin.enabled) {
     statusMessage.textContent = "Admin mode is already enabled.";
     return;
   }
 
-  const promptMessage = state.admin.configured
-    ? "Admin password"
-    : "Create the admin password for this computer";
-  const password = window.prompt(promptMessage);
+  adminPasswordInput.value = "";
+  adminModal.hidden = false;
+  adminPasswordInput.focus();
+}
 
-  if (!password) {
-    return;
-  }
+// Closes the local admin unlock modal.
+function closeAdminModal() {
+  adminModal.hidden = true;
+  adminPasswordInput.value = "";
+}
 
+// Enables admin mode with the fixed local password and keeps it enabled afterwards.
+async function enableAdminMode(password) {
   try {
     state.admin = await window.pluginManager.enableAdmin(password);
+    closeAdminModal();
     statusMessage.textContent = "Admin mode enabled.";
     await refreshAllProducts({ silent: true });
   } catch (error) {

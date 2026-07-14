@@ -1,7 +1,7 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const os = require("node:os");
-const { normalizePlatform } = require("./releasePlanner");
+const { compareVersions, normalizePlatform } = require("./releasePlanner");
 
 // Lists common Adobe extension folders for the current platform.
 function getAdobeExtensionRoots(platform = process.platform) {
@@ -89,8 +89,23 @@ async function folderMatchesProduct(extensionPath, product) {
   return bundleIds.some((bundleId) => manifestText.includes(bundleId));
 }
 
-// Returns the first installed location found for one product.
+// Selects the newest matching install when a plugin exists in several Adobe folders.
+function selectBestInstalledMatch(matches) {
+  return matches.sort((left, right) => {
+    const versionComparison = compareVersions(right.installedVersion, left.installedVersion);
+    if (versionComparison !== 0) {
+      return versionComparison;
+    }
+
+    // Prefer user-level installs when versions tie because they usually override system copies.
+    return right.installedPath.includes(os.homedir()) - left.installedPath.includes(os.homedir());
+  })[0] || null;
+}
+
+// Returns the newest installed location found for one product.
 async function detectInstalledProduct(product, platform = process.platform) {
+  const matches = [];
+
   for (const root of getAdobeExtensionRoots(platform)) {
     let entries = [];
     try {
@@ -106,13 +121,18 @@ async function detectInstalledProduct(product, platform = process.platform) {
 
       const extensionPath = path.join(root, entry.name);
       if (await folderMatchesProduct(extensionPath, product)) {
-        return {
+        matches.push({
           installed: true,
           installedPath: extensionPath,
           installedVersion: await readInstalledVersion(extensionPath)
-        };
+        });
       }
     }
+  }
+
+  const bestMatch = selectBestInstalledMatch(matches);
+  if (bestMatch) {
+    return bestMatch;
   }
 
   return {
@@ -124,5 +144,6 @@ async function detectInstalledProduct(product, platform = process.platform) {
 
 module.exports = {
   detectInstalledProduct,
-  getAdobeExtensionRoots
+  getAdobeExtensionRoots,
+  selectBestInstalledMatch
 };

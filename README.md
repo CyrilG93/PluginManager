@@ -30,7 +30,7 @@ These launchers install missing Node dependencies before opening the app.
 
 Admin mode unlocks beta builds and GitHub release page shortcuts.
 
-The first activation creates the admin password for the current computer. After that, admin mode stays enabled locally and does not ask for the password again.
+Use the admin password to activate it on the current computer. After that, admin mode stays enabled locally and does not ask for the password again.
 
 ## Development
 
@@ -60,6 +60,12 @@ Use `installMode: "script"` for simple releases that contain a platform installe
 Use `installMode: "manual"` for products that should download a package such as `.pkg`, `.exe` or `.ccx`.
 
 ## Changelog
+
+### 0.1.2 - 2026-07-14
+
+- Fixed installed-version detection when old and new copies exist in different Adobe folders.
+- Replaced the admin prompt with an in-app unlock window.
+- Set the admin password to the shared admin password.
 
 ### 0.1.1 - 2026-07-14
 

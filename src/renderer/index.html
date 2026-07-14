@@ -81,6 +81,20 @@
           <div class="status-message" id="statusMessage">Ready.</div>
         </div>
       </section>
+
+      <div class="modal-backdrop" id="adminModal" hidden>
+        <form class="admin-modal" id="adminForm">
+          <div class="modal-title">Admin Mode</div>
+          <label class="admin-field">
+            <span>Password</span>
+            <input id="adminPasswordInput" type="password" autocomplete="current-password" />
+          </label>
+          <div class="modal-actions">
+            <button class="secondary-action" type="button" id="adminCancelButton">Cancel</button>
+            <button class="primary-action" type="submit">Unlock</button>
+          </div>
+        </form>
+      </div>
     </main>
 
     <script src="./renderer.js"></script>

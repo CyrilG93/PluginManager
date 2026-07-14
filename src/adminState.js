@@ -1,19 +1,10 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
-const crypto = require("node:crypto");
-
-const HASH_ITERATIONS = 120000;
-const HASH_LENGTH = 32;
-const HASH_DIGEST = "sha256";
+const ADMIN_PASSWORD = "Extron";
 
 // Builds the admin settings path inside Electron userData.
 function getAdminStatePath(userDataPath) {
   return path.join(userDataPath, "admin-state.json");
-}
-
-// Hashes the password with a local salt before writing it to disk.
-function hashPassword(password, salt) {
-  return crypto.pbkdf2Sync(password, salt, HASH_ITERATIONS, HASH_LENGTH, HASH_DIGEST).toString("hex");
 }
 
 // Reads the admin settings file and returns null when it does not exist yet.
@@ -37,42 +28,22 @@ async function getAdminState(userDataPath) {
   const state = await readAdminFile(userDataPath);
 
   return {
-    configured: Boolean(state?.passwordHash),
+    configured: true,
     enabled: Boolean(state?.enabled)
   };
 }
 
-// Creates or verifies the admin password and keeps admin mode enabled afterwards.
+// Verifies the fixed admin password and keeps admin mode enabled afterwards.
 async function enableAdminMode(userDataPath, password) {
-  if (!password || String(password).length < 4) {
-    throw new Error("Admin password must contain at least 4 characters.");
-  }
-
-  const existingState = await readAdminFile(userDataPath);
-
-  if (!existingState?.passwordHash) {
-    const salt = crypto.randomBytes(16).toString("hex");
-    const passwordHash = hashPassword(password, salt);
-    await writeAdminFile(userDataPath, {
-      salt,
-      passwordHash,
-      enabled: true,
-      createdAt: new Date().toISOString()
-    });
-    return getAdminState(userDataPath);
-  }
-
-  const expectedHash = hashPassword(password, existingState.salt);
-  const expectedBuffer = Buffer.from(existingState.passwordHash, "hex");
-  const actualBuffer = Buffer.from(expectedHash, "hex");
-
-  if (expectedBuffer.length !== actualBuffer.length || !crypto.timingSafeEqual(expectedBuffer, actualBuffer)) {
+  if (password !== ADMIN_PASSWORD) {
     throw new Error("Incorrect admin password.");
   }
 
+  const existingState = await readAdminFile(userDataPath);
   await writeAdminFile(userDataPath, {
     ...existingState,
     enabled: true,
+    passwordMode: "fixed",
     enabledAt: new Date().toISOString()
   });
 
@@ -80,6 +51,7 @@ async function enableAdminMode(userDataPath, password) {
 }
 
 module.exports = {
+  ADMIN_PASSWORD,
   enableAdminMode,
   getAdminState
 };

@@ -413,6 +413,59 @@ input {
   line-height: 1.35;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.54);
+  z-index: 10;
+}
+
+.admin-modal {
+  display: grid;
+  width: min(360px, calc(100vw - 48px));
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #282b2d;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.36);
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.admin-field {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.admin-field input {
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #1f2122;
+  color: var(--text);
+  padding: 0 10px;
+  outline: 0;
+}
+
+.admin-field input:focus {
+  border-color: var(--accent);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 @media (max-width: 920px) {
   .app-shell {
     grid-template-columns: 58px minmax(390px, 1fr) 310px;
