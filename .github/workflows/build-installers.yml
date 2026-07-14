@@ -29,16 +29,14 @@ jobs:
       - name: Run checks
         run: npm run check
 
-      - name: Build macOS installers
+      - name: Build macOS installer
         run: npm run dist:mac -- --x64 --arm64 --publish never
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-installers
-          path: |
-            dist/*.dmg
-            dist/*.zip
+          path: dist/*.dmg
           if-no-files-found: error
 
   windows:
@@ -88,5 +86,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ github.ref_name }}
         run: |
-          mapfile -t files < <(find release-assets -type f \( -name '*.dmg' -o -name '*.zip' -o -name '*.exe' \) -print)
+          mapfile -t files < <(find release-assets -type f \( -name '*.dmg' -o -name '*.exe' \) -print)
           gh release create "$TAG_NAME" "${files[@]}" --title "$TAG_NAME" --notes "Cyril Plugin Manager $TAG_NAME"

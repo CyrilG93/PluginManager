@@ -89,7 +89,7 @@ Build the Windows installer from a Windows machine or GitHub Actions:
 npm run dist:win
 ```
 
-GitHub Actions builds macOS `.dmg`/`.zip` and Windows `.exe` artifacts. Pushing a tag like `v0.1.5` also creates a GitHub release with those installers.
+GitHub Actions builds macOS `.dmg` and Windows `.exe` artifacts. Pushing a tag like `v0.1.6` also creates a GitHub release with those installers.
 
 ## Product Catalog
 
@@ -99,6 +99,10 @@ Use `installMode: "script"` for simple releases that contain a platform installe
 Use `installMode: "manual"` for products that should download a package such as `.pkg`, `.exe` or `.ccx`.
 
 ## Changelog
+
+### 0.1.6 - 2026-07-14
+
+- Limited macOS release artifacts to the user-facing `.dmg` installer.
 
 ### 0.1.5 - 2026-07-14
 
