@@ -12,12 +12,24 @@ It reads the latest GitHub release for each product, then:
 ## Requirements
 
 - macOS or Windows
-- Node.js 20 or newer for development
 - public GitHub releases for end users
+
+Node.js is only required for development or local packaging.
 
 Private release testing can use a token through `CYRIL_PLUGIN_MANAGER_GITHUB_TOKEN` or `GITHUB_TOKEN`.
 
-## Launch
+## Installation
+
+Download the installer for your operating system from the GitHub release:
+
+- macOS: open the `.dmg`, then drag `Cyril Plugin Manager` into `Applications`
+- Windows: run the `.exe` installer
+
+The installers include the app runtime. Users do not need Node.js, npm, GitHub CLI or Terminal commands.
+
+Unsigned development builds may show a macOS Gatekeeper or Windows SmartScreen warning until the app is signed.
+
+## Development Launch
 
 You can start the app by double-clicking:
 
@@ -65,6 +77,20 @@ Run checks:
 npm run check
 ```
 
+Build a macOS installer locally:
+
+```bash
+npm run dist:mac
+```
+
+Build the Windows installer from a Windows machine or GitHub Actions:
+
+```bash
+npm run dist:win
+```
+
+GitHub Actions builds macOS `.dmg`/`.zip` and Windows `.exe` artifacts. Pushing a tag like `v0.1.5` also creates a GitHub release with those installers.
+
 ## Product Catalog
 
 Products are configured in `data/products.json`.
@@ -73,6 +99,12 @@ Use `installMode: "script"` for simple releases that contain a platform installe
 Use `installMode: "manual"` for products that should download a package such as `.pkg`, `.exe` or `.ccx`.
 
 ## Changelog
+
+### 0.1.5 - 2026-07-14
+
+- Added Electron Builder packaging for macOS `.dmg` and Windows `.exe` installers.
+- Added a GitHub Actions workflow to build and publish installer artifacts.
+- Updated user documentation for installer-based setup.
 
 ### 0.1.4 - 2026-07-14
 
