@@ -87,4 +87,4 @@ jobs:
           TAG_NAME: ${{ github.ref_name }}
         run: |
           mapfile -t files < <(find release-assets -type f \( -name '*.dmg' -o -name '*.exe' \) -print)
-          gh release create "$TAG_NAME" "${files[@]}" --title "$TAG_NAME" --notes "Cyril Plugin Manager $TAG_NAME"
+          gh release create "$TAG_NAME" "${files[@]}" --repo "$GITHUB_REPOSITORY" --title "$TAG_NAME" --notes "Cyril Plugin Manager $TAG_NAME"
