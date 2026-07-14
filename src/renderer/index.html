@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cyril Plugin Manager</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar" aria-label="Navigation">
+        <div class="window-mark"></div>
+        <button class="icon-button active" type="button" title="Produits" aria-label="Produits">⌘</button>
+        <button class="icon-button" type="button" title="Actualiser" aria-label="Actualiser" id="refreshAllButton">↻</button>
+      </aside>
+
+      <section class="product-pane" aria-label="Produits">
+        <header class="topbar">
+          <div class="tabs" role="tablist" aria-label="Filtres">
+            <button class="tab active" data-filter="all" type="button">All Products</button>
+            <button class="tab" data-filter="script" type="button">Auto</button>
+            <button class="tab" data-filter="manual" type="button">Manual</button>
+          </div>
+        </header>
+
+        <label class="search-box">
+          <span>⌕</span>
+          <input id="searchInput" type="search" placeholder="Search ..." autocomplete="off" />
+        </label>
+
+        <div class="table-head" aria-hidden="true">
+          <span>Product</span>
+          <span>Installed</span>
+          <span>Latest</span>
+        </div>
+
+        <div id="productList" class="product-list"></div>
+      </section>
+
+      <section class="detail-pane" aria-label="Détail produit">
+        <div class="detail-art">
+          <div class="detail-logo" id="detailLogo">CP</div>
+          <div class="detail-plus">+</div>
+          <div class="host-badge" id="detailHost">Pr</div>
+        </div>
+
+        <div class="detail-actions">
+          <button id="primaryAction" class="primary-action" type="button" disabled>Installer</button>
+          <button id="releaseButton" class="secondary-action" type="button" disabled>Release</button>
+        </div>
+
+        <div class="version-row">
+          <span id="detailName">Cyril Plugin Manager</span>
+          <strong id="detailVersion">-</strong>
+        </div>
+
+        <div class="section-tabs">
+          <button class="section-tab active" type="button">Compatibility</button>
+          <button class="section-tab" type="button">Status</button>
+        </div>
+
+        <div class="compatibility">
+          <span class="app-chip" id="detailKind">CEP</span>
+          <span id="detailCompatibility">Premiere Pro</span>
+        </div>
+
+        <div class="status-card">
+          <div class="status-line">
+            <span>Installed</span>
+            <strong id="installedState">Unknown</strong>
+          </div>
+          <div class="status-line">
+            <span>Asset</span>
+            <strong id="assetState">-</strong>
+          </div>
+          <div class="status-message" id="statusMessage">Ready.</div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./renderer.js"></script>
+  </body>
+</html>

@@ -1,0 +1,122 @@
+[
+  {
+    "id": "premiere-beat-detector",
+    "name": "Premiere Beat Detector",
+    "repository": "CyrilG93/PremiereBeatDetector",
+    "host": "Premiere Pro",
+    "kind": "CEP",
+    "installMode": "script",
+    "bundleIds": ["com.antigravity.beatdetector"],
+    "description": "Detects beats and prepares timeline markers from audio."
+  },
+  {
+    "id": "premiere-database",
+    "name": "Premiere DataBase",
+    "repository": "CyrilG93/PremiereDataBase",
+    "host": "Premiere Pro",
+    "kind": "CEP",
+    "installMode": "script",
+    "bundleIds": ["com.database.premiere"],
+    "description": "Manages reusable Premiere Pro project databases."
+  },
+  {
+    "id": "premiere-effect-analyzer",
+    "name": "Premiere Effect Analyzer",
+    "repository": "CyrilG93/PremiereEffectAnalyzer",
+    "host": "Premiere Pro",
+    "kind": "CEP",
+    "installMode": "script",
+    "bundleIds": ["com.cyrilplugin.PremiereEffectAnalyzer"],
+    "description": "Inspects Premiere effects and match names."
+  },
+  {
+    "id": "premiere-export-button",
+    "name": "Premiere Export Button",
+    "repository": "CyrilG93/PremiereExportButton",
+    "host": "Premiere Pro",
+    "kind": "CEP",
+    "installMode": "script",
+    "bundleIds": ["com.cyrilg93.exportbutton"],
+    "description": "Adds a compact export launcher inside Premiere Pro."
+  },
+  {
+    "id": "premiere-file-manager",
+    "name": "Premiere File Manager",
+    "repository": "CyrilG93/PremiereFileManager",
+    "host": "Premiere Pro",
+    "kind": "CEP",
+    "installMode": "script",
+    "bundleIds": ["com.filemanager.premiere"],
+    "description": "Organizes project files from a Premiere panel."
+  },
+  {
+    "id": "premiere-grid-maker",
+    "name": "Premiere Grid Maker",
+    "repository": "CyrilG93/PremiereGridMaker",
+    "host": "Premiere Pro",
+    "kind": "CEP",
+    "installMode": "script",
+    "bundleIds": ["com.cascade.premiere.gridmaker"],
+    "description": "Builds and edits grid layouts for Premiere Pro."
+  },
+  {
+    "id": "premiere-sequence-renamer",
+    "name": "Premiere Sequence Renamer",
+    "repository": "CyrilG93/PremiereSequenceRenamer",
+    "host": "Premiere Pro",
+    "kind": "CEP",
+    "installMode": "script",
+    "bundleIds": ["com.avsupport.sequencerenamer"],
+    "description": "Renames Premiere sequences with repeatable rules."
+  },
+  {
+    "id": "premiere-time-tracker",
+    "name": "Premiere Time Tracker",
+    "repository": "CyrilG93/PremiereTimeTracker",
+    "host": "Premiere Pro",
+    "kind": "CEP",
+    "installMode": "script",
+    "bundleIds": ["com.cyrilg93.timetracker"],
+    "description": "Tracks editing time from inside Premiere Pro."
+  },
+  {
+    "id": "premiere-audio-separator",
+    "name": "Premiere Pro Audio Separator",
+    "repository": "CyrilG93/PremierePro-AudioSeparator",
+    "host": "Premiere Pro",
+    "kind": "CEP",
+    "installMode": "manual",
+    "bundleIds": ["com.audioseparator"],
+    "description": "Separates vocals, drums, bass and other stems with a private runtime."
+  },
+  {
+    "id": "premiere-sub-creator",
+    "name": "Premiere Sub Creator",
+    "repository": "CyrilG93/PremiereSubCreator",
+    "host": "Premiere Pro / After Effects",
+    "kind": "CEP",
+    "installMode": "manual",
+    "bundleIds": ["com.cyrilplugin.SubCreator"],
+    "description": "Creates subtitles and styled captions with packaged runtimes."
+  },
+  {
+    "id": "premiere-toolbar",
+    "name": "Premiere Tool Bar",
+    "repository": "CyrilG93/PremiereToolBar",
+    "host": "Premiere Pro",
+    "kind": "UXP",
+    "installMode": "manual",
+    "bundleIds": ["com.cyrilplugin.toolbar"],
+    "description": "Adds a customizable UXP toolbar for common Premiere actions."
+  },
+  {
+    "id": "premiere-youtube-downloader",
+    "name": "Premiere YouTube Downloader",
+    "repository": "CyrilG93/PremiereYouTubeDownloader",
+    "host": "Premiere Pro",
+    "kind": "CEP",
+    "installMode": "manual",
+    "bundleIds": ["com.youtubedownloader.premiere"],
+    "description": "Downloads and converts YouTube media for Premiere workflows."
+  }
+]

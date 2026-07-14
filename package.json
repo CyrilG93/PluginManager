@@ -1,0 +1,29 @@
+{
+  "name": "cyril-plugin-manager",
+  "version": "0.1.0",
+  "description": "A desktop manager for installing Cyril Plugin releases from GitHub.",
+  "main": "src/main.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node scripts/start-electron.js",
+    "lint": "eslint src scripts tests",
+    "test": "node --test",
+    "check": "npm run lint && npm test"
+  },
+  "keywords": [
+    "adobe",
+    "plugins",
+    "premiere",
+    "installer"
+  ],
+  "author": "CyrilG93",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@eslint/js": "^9.31.0",
+    "electron": "^43.1.0",
+    "eslint": "^9.31.0"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16"
+  }
+}
