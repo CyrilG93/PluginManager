@@ -422,6 +422,10 @@ input {
   z-index: 10;
 }
 
+.modal-backdrop[hidden] {
+  display: none;
+}
+
 .admin-modal {
   display: grid;
   width: min(360px, calc(100vw - 48px));

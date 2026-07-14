@@ -61,6 +61,10 @@ Use `installMode: "manual"` for products that should download a package such as 
 
 ## Changelog
 
+### 0.1.3 - 2026-07-14
+
+- Fixed the admin password window so it only opens from the Admin button and closes after unlock.
+
 ### 0.1.2 - 2026-07-14
 
 - Fixed installed-version detection when old and new copies exist in different Adobe folders.
