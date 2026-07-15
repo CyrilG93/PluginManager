@@ -10,8 +10,11 @@ const state = {
     enabled: false
   },
   busyProductIds: new Set(),
-  refreshingProductIds: new Set()
+  refreshingProductIds: new Set(),
+  productLogs: new Map()
 };
+
+const MAX_LOG_LINES = 300;
 
 const productList = document.getElementById("productList");
 const productTableHead = document.getElementById("productTableHead");
@@ -38,6 +41,8 @@ const assetState = document.getElementById("assetState");
 const betaLine = document.getElementById("betaLine");
 const betaState = document.getElementById("betaState");
 const statusMessage = document.getElementById("statusMessage");
+const installLog = document.getElementById("installLog");
+const clearLogsButton = document.getElementById("clearLogsButton");
 
 // Waits between release checks so startup does not burst GitHub API requests.
 function delay(ms) {
@@ -54,6 +59,27 @@ function formatValue(value) {
 // Returns the product currently selected in the list.
 function getSelectedProduct() {
   return state.products.find((product) => product.id === state.selectedId) || null;
+}
+
+// Adds a timestamped line to one product's bounded local installation log.
+function appendProductLog(productId, message, stream = "stdout") {
+  if (!message) {
+    return;
+  }
+
+  const logs = state.productLogs.get(productId) || [];
+  const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const prefix = stream === "stderr" ? "!" : ">";
+  const newLines = String(message).split(/\r?\n/).filter(Boolean);
+  newLines.forEach((line) => logs.push(`[${timestamp}] ${prefix} ${line}`));
+  state.productLogs.set(productId, logs.slice(-MAX_LOG_LINES));
+}
+
+// Displays the selected product's logs and follows the newest output line.
+function renderProductLogs(productId) {
+  const logs = state.productLogs.get(productId) || [];
+  installLog.textContent = logs.length > 0 ? logs.join("\n") : "No installation logs yet.";
+  installLog.scrollTop = installLog.scrollHeight;
 }
 
 // Converts a version string to numeric parts for update comparisons.
@@ -215,7 +241,7 @@ function renderDetails() {
   uninstallAction.disabled = isBusy || !product.installed?.installed || !product.installed?.installedPath;
   betaAction.hidden = !state.admin.enabled;
   betaAction.disabled = isBusy || !release?.beta;
-  betaAction.textContent = product.installMode === "script" ? "Install Beta" : "Download Beta";
+  betaAction.textContent = "Install Beta";
   adminButton.classList.toggle("enabled", state.admin.enabled);
   adminButton.title = state.admin.enabled ? "Disable admin" : "Enable admin";
   compatibilityPanel.hidden = state.detailTab !== "compatibility";
@@ -223,6 +249,7 @@ function renderDetails() {
   document.querySelectorAll(".section-tab").forEach((button) => {
     button.classList.toggle("active", button.dataset.detailTab === state.detailTab);
   });
+  renderProductLogs(product.id);
 
   if (!isBusy && !statusMessage.textContent) {
     statusMessage.textContent = "Ready.";
@@ -313,9 +340,8 @@ async function installSelectedProduct(channel = "stable") {
   state.busyProductIds.add(product.id);
   state.detailTab = "status";
   const channelLabel = channel === "beta" ? "beta " : "";
-  statusMessage.textContent = product.installMode === "script"
-    ? `Preparing ${channelLabel}installer...`
-    : `Preparing ${channelLabel}download...`;
+  statusMessage.textContent = `Preparing ${channelLabel}installer...`;
+  appendProductLog(product.id, `Starting ${channelLabel || "stable "}installation for ${product.name}.`);
   render();
 
   try {
@@ -323,8 +349,10 @@ async function installSelectedProduct(channel = "stable") {
     product.installed = result.installed;
     state.releases.set(product.id, result.release);
     statusMessage.textContent = result.message;
+    appendProductLog(product.id, result.message);
   } catch (error) {
     statusMessage.textContent = error.message;
+    appendProductLog(product.id, error.message, "stderr");
   } finally {
     state.busyProductIds.delete(product.id);
     render();
@@ -370,6 +398,14 @@ function bindEvents() {
     installSelectedProduct("beta");
   });
 
+  clearLogsButton.addEventListener("click", () => {
+    const product = getSelectedProduct();
+    if (product) {
+      state.productLogs.delete(product.id);
+      renderProductLogs(product.id);
+    }
+  });
+
   adminButton.addEventListener("click", () => {
     if (state.admin.enabled) {
       disableAdminMode();
@@ -395,6 +431,10 @@ function bindEvents() {
   });
 
   window.pluginManager.onProductProgress((payload) => {
+    if (payload.log) {
+      appendProductLog(payload.productId, payload.log, payload.stream);
+    }
+
     if (payload.productId === state.selectedId) {
       const progress = payload.progress;
       if (progress?.total) {
@@ -403,6 +443,7 @@ function bindEvents() {
       } else {
         statusMessage.textContent = payload.message;
       }
+      renderProductLogs(payload.productId);
     }
   });
 }

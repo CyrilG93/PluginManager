@@ -278,6 +278,7 @@ input {
   display: flex;
   min-width: 0;
   flex-direction: column;
+  overflow: auto;
   padding: 20px;
   background: linear-gradient(180deg, #24282a 0%, #212527 100%);
 }
@@ -409,6 +410,10 @@ input {
   min-width: 0;
 }
 
+.detail-tab-panel[hidden] {
+  display: none;
+}
+
 .compatibility {
   display: flex;
   align-items: center;
@@ -431,6 +436,7 @@ input {
 .status-card {
   display: grid;
   gap: 8px;
+  min-height: 0;
   margin-top: 12px;
   padding: 14px;
   border: 1px solid var(--border);
@@ -460,6 +466,39 @@ input {
   margin-top: 6px;
   color: var(--teal);
   line-height: 1.35;
+}
+
+.log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.log-header button {
+  border: 0;
+  background: transparent;
+  color: var(--accent-strong);
+  cursor: pointer;
+  font: inherit;
+}
+
+.install-log {
+  min-height: 84px;
+  max-height: 170px;
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.28);
+  color: #cbd3d5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .modal-backdrop {

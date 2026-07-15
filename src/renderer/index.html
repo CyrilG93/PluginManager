@@ -58,7 +58,7 @@
 
         <div class="section-tabs">
           <button class="section-tab active" type="button" data-detail-tab="compatibility">Compatibility</button>
-          <button class="section-tab" type="button" data-detail-tab="status">Status</button>
+          <button class="section-tab" type="button" data-detail-tab="status">Status / Logs</button>
         </div>
 
         <div class="detail-tab-panel compatibility" id="compatibilityPanel">
@@ -80,6 +80,11 @@
             <strong id="betaState">-</strong>
           </div>
           <div class="status-message" id="statusMessage">Ready.</div>
+          <div class="log-header">
+            <span>Installation logs</span>
+            <button id="clearLogsButton" type="button">Clear</button>
+          </div>
+          <pre class="install-log" id="installLog">No installation logs yet.</pre>
         </div>
       </section>
 

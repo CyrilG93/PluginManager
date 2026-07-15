@@ -4,8 +4,9 @@ Cyril Plugin Manager is a desktop app for installing Cyril Plugin releases from 
 
 It reads the latest GitHub release for each product, then:
 
-- runs the matching `.sh` or `.bat` installer for automatic products, including Tool Bar UXP
-- downloads `.pkg`, `.exe`, `.ccx` or `.zxp` installers into `Downloads/Cyril Plugin Manager` for manual installation
+- runs the matching `.sh` or `.bat` installer in the background for automatic products, including Tool Bar UXP
+- displays background installer output inside the Status / Logs panel instead of opening a Terminal window
+- downloads `.pkg`, `.exe`, `.ccx` or `.zxp` installers into `Downloads/Cyril Plugin Manager`, then opens them automatically with the system installer
 - detects installed CEP/UXP extensions from common Adobe folders, with Adobe UPIA as a fallback for managed UXP installs
 - highlights products when a newer stable version is available
 - installs the stable GitHub release when the Install, Update or Reinstall action is used for an automatic product
@@ -30,6 +31,8 @@ Download the installer for your operating system from the GitHub release:
 - Windows: run the `.exe` installer
 
 The installers include the app runtime. Users do not need Node.js, npm, GitHub CLI or Terminal commands.
+
+Package installers can still display their normal Adobe Creative Cloud, macOS Installer, Windows installer or administrator confirmation window. Complete that window, then right-click the product in Cyril Plugin Manager to refresh its installed version.
 
 Unsigned development builds may show a macOS Gatekeeper or Windows SmartScreen warning until the app is signed.
 
@@ -104,7 +107,7 @@ Products are configured in `data/products.json`.
 Installed apps try to load the product catalog from the GitHub `main` branch first, then fall back to the bundled catalog if the computer is offline. This lets the product list change without asking users to reinstall Cyril Plugin Manager.
 
 Use `installMode: "script"` for simple releases that contain a platform installer script.
-Use `installMode: "manual"` for products that should download a package such as `.pkg`, `.exe` or `.ccx`.
+Use `installMode: "manual"` for products that should download and open a package such as `.pkg`, `.exe` or `.ccx`.
 For UXP products, `upiaNames` can list the display names returned by Adobe UPIA when they differ from the catalog product name.
 
 ## Changelog

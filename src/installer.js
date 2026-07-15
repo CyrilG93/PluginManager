@@ -22,11 +22,6 @@ function getManualDownloadRoot() {
   return path.join(os.homedir(), "Downloads", "Cyril Plugin Manager");
 }
 
-// Quotes a shell argument for macOS Terminal commands.
-function shellQuote(value) {
-  return `'${String(value).replace(/'/g, "'\\''")}'`;
-}
-
 // Hashes a short value so repeated installs do not collide in the cache.
 function shortHash(value) {
   return crypto.createHash("sha1").update(value).digest("hex").slice(0, 10);
@@ -84,37 +79,110 @@ async function copyManualInstaller(filePath, product, release) {
   return targetPath;
 }
 
-// Launches a script installer in a visible terminal or command prompt.
-async function launchScriptInstaller(scriptPath) {
-  const platform = process.platform;
+// Builds the background process used to run installers without opening a terminal window.
+function getScriptLaunchSpec(scriptPath, platform = process.platform) {
   const cwd = path.dirname(scriptPath);
 
   if (platform === "darwin") {
-    await fs.chmod(scriptPath, 0o755);
-    const command = `cd ${shellQuote(cwd)} && /bin/bash ${shellQuote(scriptPath)}`;
-    spawn("osascript", ["-e", `tell application "Terminal" to do script ${JSON.stringify(command)}`], {
-      detached: true,
-      stdio: "ignore"
-    }).unref();
-    return { launched: true, method: "terminal" };
+    return {
+      command: "/bin/bash",
+      args: [scriptPath],
+      options: { cwd, windowsHide: true }
+    };
   }
 
   if (platform === "win32") {
-    spawn("cmd.exe", ["/c", "start", "", scriptPath], {
-      cwd,
-      detached: true,
-      stdio: "ignore",
-      windowsHide: false
-    }).unref();
-    return { launched: true, method: "cmd" };
+    const command = process.env.ComSpec || "cmd.exe";
+    const escapedScriptPath = String(scriptPath).replace(/"/g, '""');
+    return {
+      command,
+      args: ["/d", "/s", "/c", `call "${escapedScriptPath}" --no-pause`],
+      options: { cwd, windowsHide: true }
+    };
   }
 
   throw new Error("Automatic script installation is only supported on macOS and Windows.");
 }
 
+// Converts process output chunks into complete log lines for the renderer.
+function createLogStream(onLine) {
+  let pending = "";
+
+  return {
+    push(chunk) {
+      pending += chunk.toString("utf8").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+      const lines = pending.split("\n");
+      pending = lines.pop() || "";
+      lines.filter(Boolean).forEach(onLine);
+    },
+    flush() {
+      if (pending) {
+        onLine(pending);
+        pending = "";
+      }
+    }
+  };
+}
+
+// Runs a script installer in the background and forwards its output to the in-app logs.
+async function launchScriptInstaller(scriptPath, onStatus = () => {}, platform = process.platform) {
+  if (platform === "darwin") {
+    await fs.chmod(scriptPath, 0o755);
+  }
+
+  const spec = getScriptLaunchSpec(scriptPath, platform);
+  return new Promise((resolve, reject) => {
+    const child = spawn(spec.command, spec.args, {
+      ...spec.options,
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    const stdout = createLogStream((line) => {
+      onStatus({ stage: "install", message: "Installing in background...", log: line, stream: "stdout" });
+    });
+    const stderr = createLogStream((line) => {
+      onStatus({ stage: "install", message: "Installing in background...", log: line, stream: "stderr" });
+    });
+    let settled = false;
+
+    child.stdout.on("data", (chunk) => stdout.push(chunk));
+    child.stderr.on("data", (chunk) => stderr.push(chunk));
+    child.on("error", (error) => {
+      if (!settled) {
+        settled = true;
+        reject(error);
+      }
+    });
+    child.on("close", (code) => {
+      stdout.flush();
+      stderr.flush();
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      if (code === 0) {
+        resolve({ launched: true, method: "background", exitCode: code });
+        return;
+      }
+
+      reject(new Error(`Installer exited with code ${code}. Check the installation logs.`));
+    });
+  });
+}
+
 // Opens a file location in Finder or Explorer.
 function revealInFileManager(filePath, shell) {
   shell.showItemInFolder(filePath);
+}
+
+// Opens a downloaded package with the operating system's associated installer application.
+async function openManualInstaller(filePath, shell) {
+  const errorMessage = await shell.openPath(filePath);
+  if (errorMessage) {
+    throw new Error(errorMessage);
+  }
+
+  return { launched: true, method: "system" };
 }
 
 // Downloads one release asset and returns either the file or extracted release files.
@@ -169,23 +237,51 @@ async function installProductRelease(product, release, shell, onStatus = () => {
   }
 
   if (plan.action === "script") {
-    onStatus({ stage: "launch", message: `Launching ${path.basename(plan.file)}` });
-    const result = await launchScriptInstaller(plan.file);
+    const installerName = path.basename(plan.file);
+    onStatus({
+      stage: "launch",
+      message: `Running ${installerName} in background...`,
+      log: `Running ${installerName} without a terminal window.`
+    });
+    const result = await launchScriptInstaller(plan.file, onStatus);
     return {
       action: "script",
       filePath: plan.file,
-      message: "Installer script launched.",
+      message: "Installation completed.",
       ...result
     };
   }
 
   const manualPath = await copyManualInstaller(plan.file, product, release);
-  revealInFileManager(manualPath, shell);
-  return {
-    action: "manual",
-    filePath: manualPath,
-    message: "Installer downloaded. Open it manually to continue."
-  };
+  onStatus({
+    stage: "launch",
+    message: `Opening ${path.basename(manualPath)}...`,
+    log: `Opening ${path.basename(manualPath)} with the system installer.`
+  });
+
+  try {
+    const result = await openManualInstaller(manualPath, shell);
+    return {
+      action: "manual",
+      filePath: manualPath,
+      message: "Installer opened. Complete the installation window, then refresh the product status.",
+      ...result
+    };
+  } catch (error) {
+    revealInFileManager(manualPath, shell);
+    onStatus({
+      stage: "launch",
+      message: "Installer downloaded, but it could not be opened automatically.",
+      log: `Automatic opening failed: ${error.message}`,
+      stream: "stderr"
+    });
+    return {
+      action: "manual",
+      filePath: manualPath,
+      launched: false,
+      message: "Installer downloaded and revealed. Open it manually to continue."
+    };
+  }
 }
 
 module.exports = {
@@ -193,8 +289,10 @@ module.exports = {
   extractZipSafely,
   getCacheRoot,
   getManualDownloadRoot,
+  getScriptLaunchSpec,
   installProductRelease,
   launchScriptInstaller,
+  openManualInstaller,
   prepareReleaseFiles,
   revealInFileManager
 };

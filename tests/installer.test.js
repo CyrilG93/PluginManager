@@ -1,0 +1,80 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const fs = require("node:fs/promises");
+const os = require("node:os");
+const path = require("node:path");
+const {
+  getScriptLaunchSpec,
+  launchScriptInstaller,
+  openManualInstaller
+} = require("../src/installer");
+
+// Creates a harmless shell installer used to verify background output capture.
+async function createShellInstaller(root, body) {
+  const scriptPath = path.join(root, "test-installer.sh");
+  await fs.writeFile(scriptPath, `#!/bin/bash\n${body}\n`, "utf8");
+  return scriptPath;
+}
+
+test("getScriptLaunchSpec hides Windows installers and disables pauses", () => {
+  const scriptPath = "C:\\Temp\\Plugin Installer\\install-windows.bat";
+  const spec = getScriptLaunchSpec(scriptPath, "win32");
+
+  assert.equal(spec.options.windowsHide, true);
+  assert.deepEqual(spec.args.slice(0, 3), ["/d", "/s", "/c"]);
+  assert.match(spec.args[3], /--no-pause/);
+  assert.match(spec.args[3], /Plugin Installer/);
+});
+
+test("launchScriptInstaller captures stdout and stderr without a terminal", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "cpm-background-installer-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const scriptPath = await createShellInstaller(root, "echo installed-output\necho installed-warning >&2");
+  const statuses = [];
+
+  const result = await launchScriptInstaller(scriptPath, (status) => statuses.push(status), "darwin");
+
+  assert.equal(result.method, "background");
+  assert.equal(result.exitCode, 0);
+  assert.ok(statuses.some((status) => status.log === "installed-output" && status.stream === "stdout"));
+  assert.ok(statuses.some((status) => status.log === "installed-warning" && status.stream === "stderr"));
+});
+
+test("launchScriptInstaller reports non-zero installer exits", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "cpm-failed-installer-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const scriptPath = await createShellInstaller(root, "echo failed >&2\nexit 7");
+
+  await assert.rejects(
+    launchScriptInstaller(scriptPath, () => {}, "darwin"),
+    /code 7/
+  );
+});
+
+test("openManualInstaller launches packages through Electron shell", async () => {
+  const openedPaths = [];
+  const shell = {
+    // Simulates Electron returning an empty error string after a successful launch.
+    openPath: async (filePath) => {
+      openedPaths.push(filePath);
+      return "";
+    }
+  };
+
+  const result = await openManualInstaller("/tmp/Plugin.pkg", shell);
+
+  assert.deepEqual(openedPaths, ["/tmp/Plugin.pkg"]);
+  assert.deepEqual(result, { launched: true, method: "system" });
+});
+
+test("openManualInstaller surfaces Electron launch errors", async () => {
+  const shell = {
+    // Simulates a missing file association reported by Electron.
+    openPath: async () => "No application is associated with this file."
+  };
+
+  await assert.rejects(
+    openManualInstaller("/tmp/Plugin.ccx", shell),
+    /No application is associated/
+  );
+});
