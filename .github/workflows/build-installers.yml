@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   macos:
-    name: macOS DMG
+    name: macOS ARM64 DMG
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -30,12 +30,17 @@ jobs:
         run: npm run check
 
       - name: Build macOS installer
-        run: npm run dist:mac -- --x64 --arm64 --publish never
+        run: npm run dist:mac -- --arm64 --publish never
+
+      - name: Validate macOS architecture
+        run: |
+          # Release builds must contain only the native Apple Silicon executable.
+          test "$(lipo -archs 'dist/mac-arm64/Cyril Plugin Manager.app/Contents/MacOS/Cyril Plugin Manager')" = "arm64"
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macos-installers
+          name: macos-arm64-installer
           path: dist/*.dmg
           if-no-files-found: error
 
@@ -87,4 +92,18 @@ jobs:
           TAG_NAME: ${{ github.ref_name }}
         run: |
           mapfile -t files < <(find release-assets -type f \( -name '*.dmg' -o -name '*.exe' \) -print)
+          # Publish one Apple Silicon DMG and one standard Windows x64 installer only.
+          mac_arm64_count=0
+          windows_x64_count=0
+          for file in "${files[@]}"; do
+            case "$file" in
+              *-mac-arm64.dmg) mac_arm64_count=$((mac_arm64_count + 1)) ;;
+              *-win-x64.exe) windows_x64_count=$((windows_x64_count + 1)) ;;
+              *) printf 'Unexpected release asset: %s\n' "$file" >&2; exit 1 ;;
+            esac
+          done
+          if [[ "${#files[@]}" -ne 2 || "$mac_arm64_count" -ne 1 || "$windows_x64_count" -ne 1 ]]; then
+            printf 'Expected one macOS ARM64 DMG and one Windows x64 EXE, received:\n%s\n' "${files[@]}" >&2
+            exit 1
+          fi
           gh release create "$TAG_NAME" "${files[@]}" --repo "$GITHUB_REPOSITORY" --title "$TAG_NAME" --notes "Cyril Plugin Manager $TAG_NAME"

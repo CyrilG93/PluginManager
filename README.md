@@ -29,8 +29,10 @@ Private release testing can use a token through `CYRIL_PLUGIN_MANAGER_GITHUB_TOK
 
 Download the installer for your operating system from the GitHub release:
 
-- macOS: open the `.dmg`, then drag `Cyril Plugin Manager` into `Applications`
-- Windows: run the `.exe` installer
+- macOS Apple Silicon: open the ARM64 `.dmg`, then drag `Cyril Plugin Manager` into `Applications`
+- Windows x64: run the `.exe` installer
+
+The macOS release is ARM64-only for Apple Silicon. Intel Macs are not supported by this build; the Windows installer remains x64.
 
 The installers include the app runtime. Users do not need Node.js, npm, GitHub CLI or Terminal commands.
 
@@ -113,6 +115,14 @@ Use `installMode: "manual"` for products that should download and open a package
 For UXP products, `upiaNames` can list the display names returned by Adobe UPIA when they differ from the catalog product name.
 
 ## Changelog
+
+### 0.1.15 - 2026-07-15
+
+- Added the CPT application icon on macOS and Windows.
+- Improved refreshes so installed versions, including Tool Bar UXP, are detected again.
+- Moved automatic installer output into the app and opened downloaded package installers automatically.
+- Added installation and update actions from GitHub releases.
+- Limited the macOS release installer to ARM64 while keeping Windows x64.
 
 ### 0.1.10 - 2026-07-14
 
