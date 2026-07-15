@@ -23,9 +23,9 @@ test("getScriptLaunchSpec hides Windows installers and disables pauses", () => {
   const spec = getScriptLaunchSpec(scriptPath, "win32");
 
   assert.equal(spec.options.windowsHide, true);
-  assert.deepEqual(spec.args.slice(0, 3), ["/d", "/s", "/c"]);
-  assert.match(spec.args[3], /--no-pause/);
-  assert.match(spec.args[3], /Plugin Installer/);
+  assert.deepEqual(spec.args.slice(0, 2), ["/d", "/c"]);
+  assert.match(spec.args[2], /--no-pause/);
+  assert.match(spec.args[2], /Plugin Installer/);
 });
 
 test("launchScriptInstaller captures stdout and stderr without a terminal", async (t) => {

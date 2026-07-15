@@ -96,7 +96,7 @@ function getScriptLaunchSpec(scriptPath, platform = process.platform) {
     const escapedScriptPath = String(scriptPath).replace(/"/g, '""');
     return {
       command,
-      args: ["/d", "/s", "/c", `call "${escapedScriptPath}" --no-pause`],
+      args: ["/d", "/c", `"${escapedScriptPath}" --no-pause`],
       options: { cwd, windowsHide: true }
     };
   }
