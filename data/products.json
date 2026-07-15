@@ -95,8 +95,9 @@
     "repository": "CyrilG93/PremiereToolBar",
     "host": "Premiere Pro",
     "kind": "UXP",
-    "installMode": "manual",
+    "installMode": "script",
     "bundleIds": ["com.cyrilplugin.toolbar"],
+    "upiaNames": ["Tool Bar"],
     "description": "Adds a customizable UXP toolbar for common Premiere actions."
   },
   {

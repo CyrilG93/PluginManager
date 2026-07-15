@@ -222,10 +222,16 @@ ipcMain.handle("products:refresh", async (_event, productId, options = {}) => {
   }
 
   const adminState = await getAdminState(app.getPath("userData"));
-  return getProductReleaseState(product, {
-    includeBeta: Boolean(options.includeBeta && adminState.enabled),
-    force: Boolean(options.force)
-  });
+  const [release, installed] = await Promise.all([
+    getProductReleaseState(product, {
+      includeBeta: Boolean(options.includeBeta && adminState.enabled),
+      force: Boolean(options.force)
+    }),
+    detectInstalledProduct(product)
+  ]);
+
+  // Return both remote and local state so every refresh can correct stale installed versions.
+  return { release, installed };
 });
 
 ipcMain.handle("products:install", async (_event, productId, channel = "stable") => {

@@ -1,6 +1,7 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const os = require("node:os");
+const { spawn } = require("node:child_process");
 const { compareVersions, normalizePlatform } = require("./releasePlanner");
 
 // Lists common Adobe extension folders for the current platform.
@@ -32,6 +33,113 @@ function getAdobeExtensionRoots(platform = process.platform) {
   }
 
   return [];
+}
+
+// Lists the documented Adobe UPIA executables that can report managed UXP installs.
+function getUpiaExecutableCandidates(platform = process.platform) {
+  const normalized = normalizePlatform(platform);
+
+  if (normalized === "macos") {
+    return [
+      "/Library/Application Support/Adobe/Adobe Desktop Common/RemoteComponents/UPI/UnifiedPluginInstallerAgent/UnifiedPluginInstallerAgent.app/Contents/macOS/UnifiedPluginInstallerAgent"
+    ];
+  }
+
+  if (normalized === "windows") {
+    const programFiles = process.env.ProgramFiles || "C:\\Program Files";
+    const programFilesX86 = process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
+    const relativePath = path.join(
+      "Common Files",
+      "Adobe",
+      "Adobe Desktop Common",
+      "RemoteComponents",
+      "UPI",
+      "UnifiedPluginInstallerAgent",
+      "UnifiedPluginInstallerAgent.exe"
+    );
+
+    return [path.join(programFiles, relativePath), path.join(programFilesX86, relativePath)];
+  }
+
+  return [];
+}
+
+// Returns the first available UPIA executable without making detection depend on Adobe tooling.
+async function findUpiaExecutable(platform = process.platform) {
+  for (const candidate of getUpiaExecutableCandidates(platform)) {
+    try {
+      await fs.access(candidate);
+      return candidate;
+    } catch (_error) {
+      // Continue through the documented Adobe installation locations.
+    }
+  }
+
+  return null;
+}
+
+// Reads Adobe's managed plugin inventory as a fallback when no readable UXP folder is found.
+async function listUpiaPlugins(platform = process.platform) {
+  const normalized = normalizePlatform(platform);
+  const executable = await findUpiaExecutable(platform);
+  if (!executable) {
+    return "";
+  }
+
+  const args = normalized === "windows" ? ["/list", "all"] : ["--list", "all"];
+  return new Promise((resolve) => {
+    const child = spawn(executable, args, {
+      stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true
+    });
+    const stdout = [];
+
+    child.stdout.on("data", (chunk) => stdout.push(chunk));
+    child.on("error", () => resolve(""));
+    child.on("close", (code) => resolve(code === 0 ? Buffer.concat(stdout).toString("utf8") : ""));
+  });
+}
+
+// Parses the fixed-column inventory printed by UPIA on macOS and Windows.
+function parseUpiaPluginList(output) {
+  const plugins = [];
+
+  for (const line of String(output || "").split(/\r?\n/)) {
+    const match = line.match(/^\s*(Enabled|Disabled)\s+(.+?)\s{2,}([0-9][0-9A-Za-z.+_-]*)\s*$/i);
+    if (match) {
+      plugins.push({
+        status: match[1].toLowerCase(),
+        name: match[2].trim(),
+        version: match[3]
+      });
+    }
+  }
+
+  return plugins;
+}
+
+// Normalizes UPIA display names so catalog aliases remain case-insensitive.
+function normalizeInstalledName(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+// Selects the newest UPIA entry matching a product's explicit display-name aliases.
+function selectUpiaProductMatch(product, output) {
+  const acceptedNames = new Set([
+    product.name,
+    ...(product.upiaNames || []),
+    ...(product.bundleIds || [])
+  ].map(normalizeInstalledName));
+  const matches = parseUpiaPluginList(output)
+    .filter((plugin) => acceptedNames.has(normalizeInstalledName(plugin.name)))
+    .map((plugin) => ({
+      installed: true,
+      installedPath: null,
+      installedVersion: plugin.version,
+      installedSource: "upia"
+    }));
+
+  return selectBestInstalledMatch(matches);
 }
 
 // Reads a file only when it exists so install detection can scan many paths.
@@ -98,7 +206,8 @@ function selectBestInstalledMatch(matches) {
     }
 
     // Prefer user-level installs when versions tie because they usually override system copies.
-    return right.installedPath.includes(os.homedir()) - left.installedPath.includes(os.homedir());
+    return String(right.installedPath || "").includes(os.homedir())
+      - String(left.installedPath || "").includes(os.homedir());
   })[0] || null;
 }
 
@@ -134,9 +243,25 @@ async function findInstalledProductMatches(product, platform = process.platform,
 }
 
 // Returns the newest installed location found for one product.
-async function detectInstalledProduct(product, platform = process.platform) {
-  const matches = await findInstalledProductMatches(product, platform);
+async function detectInstalledProduct(product, platform = process.platform, options = {}) {
+  const roots = options.roots || getAdobeExtensionRoots(platform);
+  const matches = await findInstalledProductMatches(product, platform, roots);
   const bestMatch = selectBestInstalledMatch(matches);
+  if (bestMatch?.installedVersion) {
+    return bestMatch;
+  }
+
+  // Use Adobe's own inventory for UXP installs hidden behind Creative Cloud management.
+  if (String(product.kind || "").toUpperCase() === "UXP" || product.upiaNames?.length) {
+    const upiaOutput = Object.hasOwn(options, "upiaOutput")
+      ? options.upiaOutput
+      : await listUpiaPlugins(platform);
+    const upiaMatch = selectUpiaProductMatch(product, upiaOutput);
+    if (upiaMatch) {
+      return upiaMatch;
+    }
+  }
+
   if (bestMatch) {
     return bestMatch;
   }
@@ -150,7 +275,12 @@ async function detectInstalledProduct(product, platform = process.platform) {
 
 module.exports = {
   detectInstalledProduct,
+  findUpiaExecutable,
   findInstalledProductMatches,
   getAdobeExtensionRoots,
-  selectBestInstalledMatch
+  getUpiaExecutableCandidates,
+  listUpiaPlugins,
+  parseUpiaPluginList,
+  selectBestInstalledMatch,
+  selectUpiaProductMatch
 };

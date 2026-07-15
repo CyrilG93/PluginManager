@@ -4,13 +4,14 @@ Cyril Plugin Manager is a desktop app for installing Cyril Plugin releases from 
 
 It reads the latest GitHub release for each product, then:
 
-- runs the matching `.sh` or `.bat` installer for simple plugins
+- runs the matching `.sh` or `.bat` installer for automatic products, including Tool Bar UXP
 - downloads `.pkg`, `.exe`, `.ccx` or `.zxp` installers into `Downloads/Cyril Plugin Manager` for manual installation
-- detects installed CEP/UXP extensions when they are found in common Adobe extension folders
+- detects installed CEP/UXP extensions from common Adobe folders, with Adobe UPIA as a fallback for managed UXP installs
 - highlights products when a newer stable version is available
+- installs the stable GitHub release when the Install, Update or Reinstall action is used for an automatic product
 - uninstalls detected CEP/UXP extension folders
 
-GitHub is checked at startup, when using the global refresh button, when refreshing one product with right-click, and when an install needs release data that is not already cached.
+GitHub is checked at startup, when using the global refresh button, when refreshing one product with right-click, and when an install needs release data that is not already cached. Every product refresh also rescans the installed version, so a right-click immediately corrects stale local status.
 
 ## Requirements
 
@@ -104,6 +105,7 @@ Installed apps try to load the product catalog from the GitHub `main` branch fir
 
 Use `installMode: "script"` for simple releases that contain a platform installer script.
 Use `installMode: "manual"` for products that should download a package such as `.pkg`, `.exe` or `.ccx`.
+For UXP products, `upiaNames` can list the display names returned by Adobe UPIA when they differ from the catalog product name.
 
 ## Changelog
 

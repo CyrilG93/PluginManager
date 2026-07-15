@@ -212,7 +212,7 @@ function renderDetails() {
 
   primaryAction.textContent = getPrimaryActionLabel(product);
   primaryAction.disabled = isBusy;
-  uninstallAction.disabled = isBusy || !product.installed?.installed;
+  uninstallAction.disabled = isBusy || !product.installed?.installed || !product.installed?.installedPath;
   betaAction.hidden = !state.admin.enabled;
   betaAction.disabled = isBusy || !release?.beta;
   betaAction.textContent = product.installMode === "script" ? "Install Beta" : "Download Beta";
@@ -235,7 +235,7 @@ function render() {
   renderDetails();
 }
 
-// Updates one product with latest GitHub release metadata.
+// Updates one product with both GitHub release metadata and its current installed version.
 async function refreshProduct(productId, options = {}) {
   const product = state.products.find((entry) => entry.id === productId);
   state.refreshingProductIds.add(productId);
@@ -244,14 +244,15 @@ async function refreshProduct(productId, options = {}) {
   try {
     if (!options.silent && productId === state.selectedId) {
       state.detailTab = "status";
-      statusMessage.textContent = "Checking latest release...";
+      statusMessage.textContent = "Checking latest release and installed version...";
     }
 
-    const release = await window.pluginManager.refreshProduct(productId, {
+    const refreshed = await window.pluginManager.refreshProduct(productId, {
       includeBeta: state.admin.enabled,
       force: Boolean(options.force)
     });
-    state.releases.set(productId, release);
+    state.releases.set(productId, refreshed.release);
+    product.installed = refreshed.installed;
 
     if (!options.silent && productId === state.selectedId) {
       statusMessage.textContent = "Ready.";
