@@ -18,6 +18,17 @@ async function createTestInstaller(root, unixBody, windowsBody) {
   return scriptPath;
 }
 
+// Adds captured child output to test failures so Windows command parsing remains diagnosable in CI.
+async function launchTestInstaller(scriptPath, statuses) {
+  try {
+    return await launchScriptInstaller(scriptPath, (status) => statuses.push(status));
+  } catch (error) {
+    const output = statuses.map((status) => `${status.stream}: ${status.log}`).join(" | ");
+    error.message = `${error.message} Captured output: ${output || "none"}`;
+    throw error;
+  }
+}
+
 test("getScriptLaunchSpec hides Windows installers and disables pauses", () => {
   const scriptPath = "C:\\Temp\\Plugin Installer\\install-windows.bat";
   const spec = getScriptLaunchSpec(scriptPath, "win32");
@@ -38,7 +49,7 @@ test("launchScriptInstaller captures stdout and stderr without a terminal", asyn
   );
   const statuses = [];
 
-  const result = await launchScriptInstaller(scriptPath, (status) => statuses.push(status));
+  const result = await launchTestInstaller(scriptPath, statuses);
 
   assert.equal(result.method, "background");
   assert.equal(result.exitCode, 0);
@@ -54,9 +65,10 @@ test("launchScriptInstaller reports non-zero installer exits", async (t) => {
     "echo failed >&2\nexit 7",
     "echo failed 1>&2\nexit /b 7"
   );
+  const statuses = [];
 
   await assert.rejects(
-    launchScriptInstaller(scriptPath, () => {}),
+    launchTestInstaller(scriptPath, statuses),
     /code 7/
   );
 });
