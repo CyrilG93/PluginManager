@@ -12,6 +12,7 @@ It reads the latest GitHub release for each product, then:
 - detects installed CEP/UXP extensions from common Adobe folders, with Adobe UPIA as a fallback for managed UXP installs
 - highlights products when a newer stable version is available
 - installs the stable GitHub release when the Install, Update or Reinstall action is used for an automatic product
+- checks for a newer Plugin Manager release at startup and displays an update banner
 - uninstalls detected CEP/UXP extension folders
 
 GitHub is checked at startup, when using the global refresh button, when refreshing one product with right-click, and when an install needs release data that is not already cached. Every product refresh also rescans the installed version, so a right-click immediately corrects stale local status.
@@ -35,6 +36,8 @@ Download the installer for your operating system from the GitHub release:
 The macOS release is ARM64-only for Apple Silicon. Intel Macs are not supported by this build; the Windows installer remains x64.
 
 The installers include the app runtime. Users do not need Node.js, npm, GitHub CLI or Terminal commands.
+
+When a newer Plugin Manager release is available, the app displays a banner, downloads the matching DMG or EXE, then opens it automatically. Because current builds are unsigned, the final replacement or installer confirmation remains manual.
 
 Package installers can still display their normal Adobe Creative Cloud, macOS Installer, Windows installer or administrator confirmation window. Complete that window, then right-click the product in Cyril Plugin Manager to refresh its installed version.
 

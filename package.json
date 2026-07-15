@@ -1,6 +1,6 @@
 {
   "name": "cyril-plugin-manager",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "A desktop manager for installing Cyril Plugin releases from GitHub.",
   "main": "src/main.js",
   "type": "commonjs",

@@ -11,7 +11,14 @@ const state = {
   },
   busyProductIds: new Set(),
   refreshingProductIds: new Set(),
-  productLogs: new Map()
+  productLogs: new Map(),
+  appUpdate: {
+    available: false,
+    supported: false,
+    busy: false,
+    dismissedVersion: null,
+    message: ""
+  }
 };
 
 const MAX_LOG_LINES = 300;
@@ -43,6 +50,11 @@ const betaState = document.getElementById("betaState");
 const statusMessage = document.getElementById("statusMessage");
 const installLog = document.getElementById("installLog");
 const clearLogsButton = document.getElementById("clearLogsButton");
+const appUpdateBanner = document.getElementById("appUpdateBanner");
+const appUpdateTitle = document.getElementById("appUpdateTitle");
+const appUpdateMessage = document.getElementById("appUpdateMessage");
+const appUpdateAction = document.getElementById("appUpdateAction");
+const appUpdateDismiss = document.getElementById("appUpdateDismiss");
 
 // Waits between release checks so startup does not burst GitHub API requests.
 function delay(ms) {
@@ -256,10 +268,61 @@ function renderDetails() {
   }
 }
 
+// Displays a persistent startup banner when a newer Plugin Manager release exists.
+function renderAppUpdateBanner() {
+  const update = state.appUpdate;
+  const dismissed = update.dismissedVersion === update.latestVersion;
+  appUpdateBanner.hidden = !update.available || dismissed;
+  if (appUpdateBanner.hidden) {
+    return;
+  }
+
+  appUpdateTitle.textContent = `Plugin Manager ${update.latestVersion} available`;
+  appUpdateMessage.textContent = update.message || `Installed: ${update.currentVersion}. Download: ${update.assetName || "unavailable"}.`;
+  appUpdateAction.textContent = update.busy ? "Downloading..." : "Update";
+  appUpdateAction.disabled = update.busy || !update.supported;
+  appUpdateDismiss.disabled = update.busy;
+}
+
 // Renders the complete UI from the current state.
 function render() {
   renderProductList();
   renderDetails();
+  renderAppUpdateBanner();
+}
+
+// Checks the app's own stable GitHub release independently from product refreshes.
+async function refreshAppUpdate() {
+  try {
+    const update = await window.pluginManager.checkAppUpdate();
+    state.appUpdate = {
+      ...state.appUpdate,
+      ...update,
+      busy: false,
+      message: ""
+    };
+  } catch (_error) {
+    // App update failures stay silent so offline startup remains non-blocking.
+  } finally {
+    render();
+  }
+}
+
+// Downloads and opens the installer selected by the main process.
+async function installAppUpdate() {
+  state.appUpdate.busy = true;
+  state.appUpdate.message = "Preparing update download...";
+  render();
+
+  try {
+    const result = await window.pluginManager.installAppUpdate();
+    state.appUpdate.message = result.message;
+  } catch (error) {
+    state.appUpdate.message = error.message;
+  } finally {
+    state.appUpdate.busy = false;
+    render();
+  }
 }
 
 // Updates one product with both GitHub release metadata and its current installed version.
@@ -383,7 +446,17 @@ function bindEvents() {
   });
 
   refreshAllButton.addEventListener("click", () => {
+    refreshAppUpdate();
     refreshAllProducts({ force: true });
+  });
+
+  appUpdateAction.addEventListener("click", () => {
+    installAppUpdate();
+  });
+
+  appUpdateDismiss.addEventListener("click", () => {
+    state.appUpdate.dismissedVersion = state.appUpdate.latestVersion;
+    render();
   });
 
   primaryAction.addEventListener("click", () => {
@@ -446,6 +519,14 @@ function bindEvents() {
       renderProductLogs(payload.productId);
     }
   });
+
+  window.pluginManager.onAppUpdateProgress((payload) => {
+    const progress = payload.progress;
+    state.appUpdate.message = progress?.total
+      ? `${payload.message} (${Math.round((progress.downloaded / progress.total) * 100)}%)`
+      : payload.message;
+    renderAppUpdateBanner();
+  });
 }
 
 // Opens the local admin unlock modal.
@@ -500,6 +581,7 @@ async function disableAdminMode() {
 // Loads initial product state and starts release checks for the selected item.
 async function bootstrap() {
   bindEvents();
+  refreshAppUpdate();
   state.admin = await window.pluginManager.getAdminState();
   state.products = await window.pluginManager.listProducts();
   state.selectedId = state.products[0]?.id || null;

@@ -15,6 +15,17 @@
       </aside>
 
       <section class="product-pane" aria-label="Produits">
+        <div class="app-update-banner" id="appUpdateBanner" role="status" hidden>
+          <div class="app-update-copy">
+            <strong id="appUpdateTitle">Plugin Manager update available</strong>
+            <span id="appUpdateMessage"></span>
+          </div>
+          <div class="app-update-actions">
+            <button id="appUpdateAction" type="button">Update</button>
+            <button id="appUpdateDismiss" type="button">Later</button>
+          </div>
+        </div>
+
         <header class="topbar">
           <div class="tabs" role="tablist" aria-label="Filtres">
             <button class="tab active" data-filter="all" type="button">All Products</button>

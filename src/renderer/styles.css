@@ -94,6 +94,65 @@ input {
   border-right: 1px solid var(--border);
 }
 
+.app-update-banner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+  padding: 11px 12px;
+  border: 1px solid rgba(233, 194, 90, 0.48);
+  border-radius: 7px;
+  background: rgba(233, 194, 90, 0.13);
+  color: var(--text);
+}
+
+.app-update-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.app-update-copy strong {
+  color: var(--warning);
+  font-size: 13px;
+}
+
+.app-update-copy span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-update-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.app-update-actions button {
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--warning);
+  color: #272219;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.app-update-actions button:last-child {
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--muted);
+}
+
+.app-update-actions button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
 .topbar {
   display: flex;
   align-items: center;

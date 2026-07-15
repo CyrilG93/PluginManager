@@ -1,6 +1,7 @@
 const path = require("node:path");
 const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const { disableAdminMode, enableAdminMode, getAdminState } = require("./adminState");
+const { checkForAppUpdate, downloadAndOpenAppUpdate, toPublicAppUpdateState } = require("./appUpdater");
 const { getProductById, loadProducts } = require("./catalog");
 const { GitHubApiError, getLatestBetaRelease, getLatestRelease } = require("./github");
 const { detectInstalledProduct } = require("./installStatus");
@@ -13,6 +14,7 @@ const RELEASE_CACHE_TTL_MS = 15 * 60 * 1000;
 const INSTALL_DETECTION_RETRIES = 12;
 const INSTALL_DETECTION_DELAY_MS = 1000;
 const releaseCache = new Map();
+let appUpdateCache = null;
 
 // Waits between post-install scans without blocking the Electron process.
 function delay(ms) {
@@ -181,6 +183,13 @@ function sendProductProgress(productId, payload) {
   }
 }
 
+// Sends application update download progress without mixing it into product logs.
+function sendAppUpdateProgress(payload) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("app-update-progress", payload);
+  }
+}
+
 // Rechecks Adobe extension folders after a script installer has been launched.
 async function detectInstalledProductAfterInstall(product, release, onStatus = () => {}) {
   const targetVersion = cleanVersion(release.tagName);
@@ -285,6 +294,24 @@ ipcMain.handle("admin:get-state", async () => getAdminState(app.getPath("userDat
 ipcMain.handle("admin:enable", async (_event, password) => enableAdminMode(app.getPath("userData"), password));
 
 ipcMain.handle("admin:disable", async () => disableAdminMode(app.getPath("userData")));
+
+ipcMain.handle("app:update:check", async () => {
+  appUpdateCache = await checkForAppUpdate(app.getVersion());
+  return toPublicAppUpdateState(appUpdateCache);
+});
+
+ipcMain.handle("app:update:install", async () => {
+  if (!appUpdateCache?.available) {
+    appUpdateCache = await checkForAppUpdate(app.getVersion());
+  }
+
+  return downloadAndOpenAppUpdate(appUpdateCache, shell, (progress) => {
+    sendAppUpdateProgress({
+      message: `Downloading ${appUpdateCache.assetName}`,
+      progress
+    });
+  });
+});
 
 app.whenReady().then(() => {
   createWindow();

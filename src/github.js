@@ -130,6 +130,7 @@ function normalizeRelease(release) {
       id: asset.id,
       name: asset.name,
       size: asset.size,
+      digest: asset.digest || null,
       url: asset.url,
       browserDownloadUrl: asset.browser_download_url
     }))
