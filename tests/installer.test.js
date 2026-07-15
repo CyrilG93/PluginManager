@@ -9,10 +9,12 @@ const {
   openManualInstaller
 } = require("../src/installer");
 
-// Creates a harmless shell installer used to verify background output capture.
-async function createShellInstaller(root, body) {
-  const scriptPath = path.join(root, "test-installer.sh");
-  await fs.writeFile(scriptPath, `#!/bin/bash\n${body}\n`, "utf8");
+// Creates a harmless native installer used to verify background output capture on each CI platform.
+async function createTestInstaller(root, unixBody, windowsBody) {
+  const isWindows = process.platform === "win32";
+  const scriptPath = path.join(root, isWindows ? "test-installer.bat" : "test-installer.sh");
+  const contents = isWindows ? `@echo off\r\n${windowsBody}\r\n` : `#!/bin/bash\n${unixBody}\n`;
+  await fs.writeFile(scriptPath, contents, "utf8");
   return scriptPath;
 }
 
@@ -29,10 +31,14 @@ test("getScriptLaunchSpec hides Windows installers and disables pauses", () => {
 test("launchScriptInstaller captures stdout and stderr without a terminal", async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "cpm-background-installer-"));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
-  const scriptPath = await createShellInstaller(root, "echo installed-output\necho installed-warning >&2");
+  const scriptPath = await createTestInstaller(
+    root,
+    "echo installed-output\necho installed-warning >&2",
+    "echo installed-output\necho installed-warning 1>&2"
+  );
   const statuses = [];
 
-  const result = await launchScriptInstaller(scriptPath, (status) => statuses.push(status), "darwin");
+  const result = await launchScriptInstaller(scriptPath, (status) => statuses.push(status));
 
   assert.equal(result.method, "background");
   assert.equal(result.exitCode, 0);
@@ -43,10 +49,14 @@ test("launchScriptInstaller captures stdout and stderr without a terminal", asyn
 test("launchScriptInstaller reports non-zero installer exits", async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "cpm-failed-installer-"));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
-  const scriptPath = await createShellInstaller(root, "echo failed >&2\nexit 7");
+  const scriptPath = await createTestInstaller(
+    root,
+    "echo failed >&2\nexit 7",
+    "echo failed 1>&2\nexit /b 7"
+  );
 
   await assert.rejects(
-    launchScriptInstaller(scriptPath, () => {}, "darwin"),
+    launchScriptInstaller(scriptPath, () => {}),
     /code 7/
   );
 });
