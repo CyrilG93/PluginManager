@@ -93,10 +93,9 @@ function getScriptLaunchSpec(scriptPath, platform = process.platform) {
 
   if (platform === "win32") {
     const command = process.env.ComSpec || "cmd.exe";
-    const escapedScriptPath = String(scriptPath).replace(/"/g, '""');
     return {
       command,
-      args: ["/d", "/c", `"${escapedScriptPath}" --no-pause`],
+      args: ["/d", "/c", scriptPath, "--no-pause"],
       options: { cwd, windowsHide: true }
     };
   }
