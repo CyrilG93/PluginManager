@@ -119,6 +119,12 @@ For UXP products, `upiaNames` can list the display names returned by Adobe UPIA 
 
 ## Changelog
 
+### 0.1.16 - 2026-07-15
+
+- Added a startup banner when a newer Plugin Manager version is available.
+- Added automatic download and opening of the matching macOS or Windows installer.
+- Added an integrity check before opening downloaded application updates.
+
 ### 0.1.15 - 2026-07-15
 
 - Added the CPT application icon on macOS and Windows.
