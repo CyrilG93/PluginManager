@@ -53,8 +53,8 @@ test("launchScriptInstaller captures stdout and stderr without a terminal", asyn
 
   assert.equal(result.method, "background");
   assert.equal(result.exitCode, 0);
-  assert.ok(statuses.some((status) => status.log === "installed-output" && status.stream === "stdout"));
-  assert.ok(statuses.some((status) => status.log === "installed-warning" && status.stream === "stderr"));
+  assert.ok(statuses.some((status) => status.log.trim() === "installed-output" && status.stream === "stdout"));
+  assert.ok(statuses.some((status) => status.log.trim() === "installed-warning" && status.stream === "stderr"));
 });
 
 test("launchScriptInstaller reports non-zero installer exits", async (t) => {
