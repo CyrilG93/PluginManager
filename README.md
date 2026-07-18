@@ -2,8 +2,6 @@
 
 Cyril Plugin Manager is a desktop app for installing Cyril Plugin releases from one place.
 
-The CPT icon identifies the app in Finder, the macOS Dock, the Windows Start menu and the taskbar.
-
 It reads the latest GitHub release for each product, then:
 
 - runs the matching `.sh` or `.bat` installer in the background for automatic products, including Tool Bar UXP
