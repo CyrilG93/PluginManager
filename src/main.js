@@ -30,7 +30,7 @@ function createWindow() {
     height: 720,
     minWidth: 860,
     minHeight: 560,
-    title: "Cyril Plugin Manager",
+    title: `Cyril Plugin Manager v${app.getVersion()}`,
     backgroundColor: "#202124",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -40,6 +40,12 @@ function createWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, "renderer", "index.html"));
+  // Reapplies the versioned native title after the renderer document has loaded.
+  mainWindow.webContents.once("did-finish-load", () => {
+    if (!mainWindow.isDestroyed()) {
+      mainWindow.setTitle(`Cyril Plugin Manager v${app.getVersion()}`);
+    }
+  });
 }
 
 // Loads local product state without requiring network access.

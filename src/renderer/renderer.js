@@ -195,15 +195,11 @@ function renderProductList() {
     const latestLabel = isRefreshing ? "..." : formatValue(release?.version);
     const betaLabel = isRefreshing ? "..." : formatValue(release?.beta?.version);
     const updateBadge = updateAvailable ? "<span class=\"update-pill\">Update</span>" : "";
-    const betaBadge = betaUpdateAvailable
-      ? "<span class=\"update-pill beta-update-pill\">Beta update</span>"
-      : release?.beta ? "<span class=\"beta-available-pill\">Beta available</span>" : "";
     row.innerHTML = `
       <span class="product-title">
         <span class="mode-dot">${icon}</span>
         <span class="product-name">${product.name}</span>
         ${updateBadge}
-        ${betaBadge}
       </span>
       <span class="version-cell">${formatValue(installedVersion)}</span>
       <span class="version-cell latest">${latestLabel}</span>
@@ -250,9 +246,7 @@ function renderDetails() {
     ? `${installedVersion} -> update available`
     : installedVersion || (product.installed?.installed ? "Detected" : "Not detected");
   assetState.textContent = release?.selectedAssetName || "-";
-  betaState.textContent = release?.beta?.version
-    ? `v. ${release.beta.version}${betaUpdateAvailable ? " — update available" : ""}`
-    : "-";
+  betaState.textContent = release?.beta?.version ? `v. ${release.beta.version}` : "-";
   betaLine.hidden = !state.admin.enabled;
 
   primaryAction.textContent = getPrimaryActionLabel(product);
