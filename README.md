@@ -119,6 +119,13 @@ Use `readmeUrl` to show a Readme button that opens the product documentation pag
 
 ## Changelog
 
+### 0.2.0 - 2026-07-20
+
+- Refreshed the product library with a simpler layout and a dedicated banner for every plugin.
+- Added direct Readme buttons for every product.
+- Made Admin beta updates clearer and matched beta versions to the installer for the current platform.
+- Improved catalog refreshes so corrected documentation links apply immediately.
+
 ### 0.1.16 - 2026-07-15
 
 - Added a startup banner when a newer Plugin Manager version is available.
