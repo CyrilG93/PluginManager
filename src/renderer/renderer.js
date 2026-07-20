@@ -2,7 +2,6 @@ const state = {
   products: [],
   releases: new Map(),
   selectedId: null,
-  filter: "all",
   query: "",
   detailTab: "compatibility",
   admin: {
@@ -33,12 +32,11 @@ const adminForm = document.getElementById("adminForm");
 const adminPasswordInput = document.getElementById("adminPasswordInput");
 const adminCancelButton = document.getElementById("adminCancelButton");
 const primaryAction = document.getElementById("primaryAction");
+const readmeAction = document.getElementById("readmeAction");
 const uninstallAction = document.getElementById("uninstallAction");
 const betaAction = document.getElementById("betaAction");
 const compatibilityPanel = document.getElementById("compatibilityPanel");
 const statusPanel = document.getElementById("statusPanel");
-const detailLogo = document.getElementById("detailLogo");
-const detailHost = document.getElementById("detailHost");
 const detailName = document.getElementById("detailName");
 const detailVersion = document.getElementById("detailVersion");
 const detailKind = document.getElementById("detailKind");
@@ -133,6 +131,19 @@ function hasStableUpdate(product) {
   return Boolean(installedVersion && release?.version && compareVersions(installedVersion, release.version) < 0);
 }
 
+// Checks whether the platform-specific beta package is newer than the installed plugin.
+function hasBetaUpdate(product) {
+  const release = state.releases.get(product.id);
+  const installedVersion = product.installed?.installedVersion;
+
+  return Boolean(
+    state.admin.enabled &&
+    installedVersion &&
+    release?.beta?.version &&
+    compareVersions(installedVersion, release.beta.version) < 0
+  );
+}
+
 // Chooses the primary action label from the detected install and release state.
 function getPrimaryActionLabel(product) {
   if (hasStableUpdate(product)) {
@@ -146,25 +157,14 @@ function getPrimaryActionLabel(product) {
   return "Install";
 }
 
-// Builds a short visual mark from the product name.
-function getInitials(product) {
-  return product.name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
-
-// Filters the visible product list by tab and search query.
+// Filters the single visible product list by the search query.
 function getVisibleProducts() {
   const query = state.query.trim().toLowerCase();
 
-  return state.products.filter((product) => {
-    const filterMatches = state.filter === "all" || product.installMode === state.filter;
-    const queryMatches = !query || [product.name, product.host, product.kind].join(" ").toLowerCase().includes(query);
-    return filterMatches && queryMatches;
-  });
+  return state.products.filter((product) => !query || [product.name, product.host, product.kind]
+    .join(" ")
+    .toLowerCase()
+    .includes(query));
 }
 
 // Renders the product table rows.
@@ -178,6 +178,7 @@ function renderProductList() {
     const installedVersion = product.installed?.installedVersion;
     const isRefreshing = state.refreshingProductIds.has(product.id);
     const updateAvailable = hasStableUpdate(product);
+    const betaUpdateAvailable = hasBetaUpdate(product);
     const row = document.createElement("button");
     row.type = "button";
     row.className = [
@@ -185,6 +186,7 @@ function renderProductList() {
       state.admin.enabled ? "admin" : "",
       product.id === state.selectedId ? "active" : "",
       updateAvailable ? "update-available" : "",
+      betaUpdateAvailable ? "beta-update-available" : "",
       release?.beta ? "has-beta" : ""
     ].filter(Boolean).join(" ");
     row.dataset.productId = product.id;
@@ -193,11 +195,15 @@ function renderProductList() {
     const latestLabel = isRefreshing ? "..." : formatValue(release?.version);
     const betaLabel = isRefreshing ? "..." : formatValue(release?.beta?.version);
     const updateBadge = updateAvailable ? "<span class=\"update-pill\">Update</span>" : "";
+    const betaBadge = betaUpdateAvailable
+      ? "<span class=\"update-pill beta-update-pill\">Beta update</span>"
+      : release?.beta ? "<span class=\"beta-available-pill\">Beta available</span>" : "";
     row.innerHTML = `
       <span class="product-title">
         <span class="mode-dot">${icon}</span>
         <span class="product-name">${product.name}</span>
         ${updateBadge}
+        ${betaBadge}
       </span>
       <span class="version-cell">${formatValue(installedVersion)}</span>
       <span class="version-cell latest">${latestLabel}</span>
@@ -234,9 +240,8 @@ function renderDetails() {
   const isBusy = state.busyProductIds.has(product.id);
   const installedVersion = product.installed?.installedVersion;
   const updateAvailable = hasStableUpdate(product);
+  const betaUpdateAvailable = hasBetaUpdate(product);
 
-  detailLogo.textContent = getInitials(product);
-  detailHost.textContent = product.host.includes("After") ? "Ae" : "Pr";
   detailName.textContent = product.name;
   detailVersion.textContent = release?.version ? `v. ${release.version}` : "-";
   detailKind.textContent = product.kind;
@@ -245,15 +250,19 @@ function renderDetails() {
     ? `${installedVersion} -> update available`
     : installedVersion || (product.installed?.installed ? "Detected" : "Not detected");
   assetState.textContent = release?.selectedAssetName || "-";
-  betaState.textContent = release?.beta?.version ? `v. ${release.beta.version}` : "-";
+  betaState.textContent = release?.beta?.version
+    ? `v. ${release.beta.version}${betaUpdateAvailable ? " — update available" : ""}`
+    : "-";
   betaLine.hidden = !state.admin.enabled;
 
   primaryAction.textContent = getPrimaryActionLabel(product);
   primaryAction.disabled = isBusy;
+  readmeAction.hidden = !product.readmeUrl;
+  readmeAction.disabled = false;
   uninstallAction.disabled = isBusy || !product.installed?.installed || !product.installed?.installedPath;
   betaAction.hidden = !state.admin.enabled;
   betaAction.disabled = isBusy || !release?.beta;
-  betaAction.textContent = "Install Beta";
+  betaAction.textContent = betaUpdateAvailable ? "Update Beta" : "Install Beta";
   adminButton.classList.toggle("enabled", state.admin.enabled);
   adminButton.title = state.admin.enabled ? "Disable admin" : "Enable admin";
   compatibilityPanel.hidden = state.detailTab !== "compatibility";
@@ -424,15 +433,6 @@ async function installSelectedProduct(channel = "stable") {
 
 // Initializes tab, search and action handlers.
 function bindEvents() {
-  document.querySelectorAll(".tab").forEach((button) => {
-    button.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach((tab) => tab.classList.remove("active"));
-      button.classList.add("active");
-      state.filter = button.dataset.filter;
-      render();
-    });
-  });
-
   searchInput.addEventListener("input", () => {
     state.query = searchInput.value;
     render();
@@ -461,6 +461,20 @@ function bindEvents() {
 
   primaryAction.addEventListener("click", () => {
     installSelectedProduct();
+  });
+
+  readmeAction.addEventListener("click", async () => {
+    const product = getSelectedProduct();
+    if (!product?.readmeUrl) {
+      return;
+    }
+
+    try {
+      await window.pluginManager.openProductReadme(product.id);
+    } catch (error) {
+      statusMessage.textContent = error.message;
+      render();
+    }
   });
 
   uninstallAction.addEventListener("click", () => {

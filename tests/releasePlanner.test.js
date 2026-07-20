@@ -4,6 +4,7 @@ const {
   classifyFile,
   cleanVersion,
   compareVersions,
+  extractVersionFromAssetName,
   planInstallFromFiles,
   selectReleaseAsset
 } = require("../src/releasePlanner");
@@ -30,6 +31,18 @@ test("classifyFile detects supported release file types", () => {
 test("cleanVersion removes the GitHub v prefix", () => {
   assert.equal(cleanVersion("v1.2.3"), "1.2.3");
   assert.equal(cleanVersion("1.2.3"), "1.2.3");
+});
+
+test("extractVersionFromAssetName reads the platform package version", () => {
+  assert.equal(
+    extractVersionFromAssetName("AudioSeparator-v2.4.12-macOS-Installer-arm64.pkg"),
+    "2.4.12"
+  );
+  assert.equal(
+    extractVersionFromAssetName("SubCreator-v1.1.52-Windows-Full-Installer.exe"),
+    "1.1.52"
+  );
+  assert.equal(extractVersionFromAssetName("installer.pkg"), null);
 });
 
 test("compareVersions compares dotted versions", () => {

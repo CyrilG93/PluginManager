@@ -26,14 +26,6 @@
           </div>
         </div>
 
-        <header class="topbar">
-          <div class="tabs" role="tablist" aria-label="Filtres">
-            <button class="tab active" data-filter="all" type="button">All Products</button>
-            <button class="tab" data-filter="script" type="button">Auto</button>
-            <button class="tab" data-filter="manual" type="button">Manual</button>
-          </div>
-        </header>
-
         <label class="search-box">
           <span>⌕</span>
           <input id="searchInput" type="search" placeholder="Search ..." autocomplete="off" />
@@ -50,14 +42,16 @@
       </section>
 
       <section class="detail-pane" aria-label="Détail produit">
-        <div class="detail-art">
-          <div class="detail-logo" id="detailLogo">CP</div>
-          <div class="detail-plus">+</div>
-          <div class="host-badge" id="detailHost">Pr</div>
+        <!-- Replace this placeholder with the approved banner image when it is provided. -->
+        <div class="detail-banner" role="img" aria-label="Emplacement réservé pour la bannière Cyril Plugin">
+          <span>Cyril Plugin</span>
+          <strong>Banner placeholder</strong>
+          <small>Your visual will appear here.</small>
         </div>
 
         <div class="detail-actions">
           <button id="primaryAction" class="primary-action" type="button" disabled>Installer</button>
+          <button id="readmeAction" class="secondary-action" type="button" hidden>Readme</button>
           <button id="uninstallAction" class="danger-action" type="button" disabled>Uninstall</button>
           <button id="betaAction" class="beta-action" type="button" hidden disabled>Beta</button>
         </div>

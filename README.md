@@ -8,10 +8,11 @@ It reads the latest GitHub release for each product, then:
 - displays background installer output inside the Status / Logs panel instead of opening a Terminal window
 - downloads `.pkg`, `.exe`, `.ccx` or `.zxp` installers into `Downloads/Cyril Plugin Manager`, then opens them automatically with the system installer
 - detects installed CEP/UXP extensions from common Adobe folders, with Adobe UPIA as a fallback for managed UXP installs
-- highlights products when a newer stable version is available
+- highlights stable and admin beta updates, using the installed package version for the beta shown on the current platform
 - installs the stable GitHub release when the Install, Update or Reinstall action is used for an automatic product
 - checks for a newer Plugin Manager release at startup and displays an update banner
 - uninstalls detected CEP/UXP extension folders
+- opens a configured product Readme page in the browser
 
 GitHub is checked at startup, when using the global refresh button, when refreshing one product with right-click, and when an install needs release data that is not already cached. Every product refresh also rescans the installed version, so a right-click immediately corrects stale local status.
 
@@ -52,7 +53,7 @@ These launchers install missing Node dependencies before opening the app.
 
 ## Admin Mode
 
-Admin mode unlocks beta builds.
+Admin mode unlocks beta builds. When a platform-specific beta package is newer than the installed plugin, it is highlighted in the list and the action changes to **Update Beta**.
 
 Use the admin password to activate it on the current computer. After that, admin mode stays enabled locally and does not ask for the password again.
 
@@ -114,6 +115,7 @@ Installed apps try to load the product catalog from the GitHub `main` branch fir
 Use `installMode: "script"` for simple releases that contain a platform installer script.
 Use `installMode: "manual"` for products that should download and open a package such as `.pkg`, `.exe` or `.ccx`.
 For UXP products, `upiaNames` can list the display names returned by Adobe UPIA when they differ from the catalog product name.
+Use an optional `readmeUrl` to show a Readme button that opens the product documentation page in the browser.
 
 ## Changelog
 

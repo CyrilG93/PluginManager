@@ -23,6 +23,14 @@ function cleanVersion(version) {
   return String(version || "").replace(/^v/i, "");
 }
 
+// Reads a dotted product version from a packaged installer filename.
+function extractVersionFromAssetName(fileName) {
+  const baseName = path.basename(String(fileName || "")).replace(/\.[^.]+$/, "");
+  const match = baseName.match(/(?:^|[^a-z0-9])v?(\d+(?:\.\d+){1,3}(?:[-.]?(?:alpha|beta|rc)\.?\d*)?)(?=$|[^a-z0-9])/i);
+
+  return match ? cleanVersion(match[1]) : null;
+}
+
 // Converts a version string to numeric parts for simple release comparisons.
 function versionParts(version) {
   return cleanVersion(version)
@@ -166,6 +174,7 @@ module.exports = {
   classifyFile,
   cleanVersion,
   compareVersions,
+  extractVersionFromAssetName,
   normalizePlatform,
   planInstallFromFiles,
   selectReleaseAsset

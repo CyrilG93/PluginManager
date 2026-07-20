@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld("pluginManager", {
   refreshProduct: (productId, options) => ipcRenderer.invoke("products:refresh", productId, options),
   installProduct: (productId, channel) => ipcRenderer.invoke("products:install", productId, channel),
   uninstallProduct: (productId) => ipcRenderer.invoke("products:uninstall", productId),
+  openProductReadme: (productId) => ipcRenderer.invoke("products:open-readme", productId),
   checkAppUpdate: () => ipcRenderer.invoke("app:update:check"),
   installAppUpdate: () => ipcRenderer.invoke("app:update:install"),
   getAdminState: () => ipcRenderer.invoke("admin:get-state"),

@@ -6,7 +6,7 @@ const { getProductById, loadProducts } = require("./catalog");
 const { GitHubApiError, getLatestBetaRelease, getLatestRelease } = require("./github");
 const { detectInstalledProduct } = require("./installStatus");
 const { installProductRelease } = require("./installer");
-const { cleanVersion, compareVersions, selectReleaseAsset } = require("./releasePlanner");
+const { cleanVersion, compareVersions, extractVersionFromAssetName, selectReleaseAsset } = require("./releasePlanner");
 const { uninstallProduct } = require("./uninstaller");
 
 let mainWindow = null;
@@ -54,10 +54,12 @@ async function getProductsWithInstalledState() {
 // Converts a GitHub release into the compact shape consumed by the renderer.
 function normalizeReleaseState(product, release) {
   const selectedAsset = selectReleaseAsset(product, release.assets, process.platform);
+  const assetVersion = extractVersionFromAssetName(selectedAsset?.name);
 
   return {
     tagName: release.tagName,
-    version: cleanVersion(release.tagName),
+    // Beta packages can have different macOS and Windows versions under one GitHub tag.
+    version: release.prerelease ? assetVersion || cleanVersion(release.tagName) : cleanVersion(release.tagName),
     name: release.name,
     publishedAt: release.publishedAt,
     htmlUrl: release.htmlUrl,
@@ -287,6 +289,22 @@ ipcMain.handle("products:uninstall", async (_event, productId) => {
     ...result,
     message: result.removed.length > 0 ? "Plugin uninstalled." : "No installed copy was detected."
   };
+});
+
+// Opens only configured HTTPS product documentation in the user's default browser.
+ipcMain.handle("products:open-readme", async (_event, productId) => {
+  const product = await getProductById(productId);
+  if (!product?.readmeUrl) {
+    throw new Error("No Readme page is available for this product yet.");
+  }
+
+  const readmeUrl = new URL(product.readmeUrl);
+  if (readmeUrl.protocol !== "https:") {
+    throw new Error("The configured Readme page must use HTTPS.");
+  }
+
+  await shell.openExternal(readmeUrl.toString());
+  return { opened: true };
 });
 
 ipcMain.handle("admin:get-state", async () => getAdminState(app.getPath("userData")));

@@ -15,3 +15,10 @@ test("Tool Bar installs automatically and exposes its Adobe UPIA name", async ()
   assert.equal(toolBar.installMode, "script");
   assert.deepEqual(toolBar.upiaNames, ["Tool Bar"]);
 });
+
+test("File Manager exposes its public Readme page", async () => {
+  const products = await loadLocalProducts();
+  const fileManager = products.find((product) => product.id === "premiere-file-manager");
+
+  assert.equal(fileManager.readmeUrl, "https://www.cyrilplugin.com/file-manager/readme");
+});

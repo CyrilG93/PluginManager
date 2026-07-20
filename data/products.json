@@ -37,6 +37,7 @@
     "kind": "CEP",
     "installMode": "script",
     "bundleIds": ["com.filemanager.premiere"],
+    "readmeUrl": "https://www.cyrilplugin.com/file-manager/readme",
     "description": "Organizes project files from a Premiere panel."
   },
   {
