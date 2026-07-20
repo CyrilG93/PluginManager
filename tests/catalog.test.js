@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { loadLocalProducts } = require("../src/catalog");
+const { getProductById, loadLocalProducts } = require("../src/catalog");
 
 test("local catalog does not include Effect Analyzer", async () => {
   const products = await loadLocalProducts();
@@ -44,4 +44,27 @@ test("Audio Separator exposes its test banner asset", async () => {
   const audioSeparator = products.find((product) => product.id === "premiere-audio-separator");
 
   assert.equal(audioSeparator.bannerImage, "AudioSeparatorBanner.jpg");
+});
+
+test("Readme lookups force a refreshed remote catalog", async (t) => {
+  const originalFetch = global.fetch;
+  const remoteProduct = {
+    id: "premiere-beat-detector",
+    name: "Premiere Beat Detector",
+    repository: "CyrilG93/PremiereBeatDetector",
+    bundleIds: ["com.antigravity.beatdetector"],
+    readmeUrl: "https://www.cyrilplugin.com/beat-detector/readme"
+  };
+
+  global.fetch = async () => ({
+    ok: true,
+    json: async () => [remoteProduct]
+  });
+  t.after(() => {
+    global.fetch = originalFetch;
+  });
+
+  const product = await getProductById("premiere-beat-detector", { force: true });
+
+  assert.equal(product.readmeUrl, remoteProduct.readmeUrl);
 });

@@ -299,7 +299,8 @@ ipcMain.handle("products:uninstall", async (_event, productId) => {
 
 // Opens only configured HTTPS product documentation in the user's default browser.
 ipcMain.handle("products:open-readme", async (_event, productId) => {
-  const product = await getProductById(productId);
+  // Refreshes the catalog so Readme URL fixes do not wait for an app restart.
+  const product = await getProductById(productId, { force: true });
   if (!product?.readmeUrl) {
     throw new Error("No Readme page is available for this product yet.");
   }

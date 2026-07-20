@@ -255,5 +255,6 @@ module.exports = {
   getGitHubToken,
   getLatestBetaRelease,
   getLatestRelease,
+  githubJsonWithFallback,
   isBetaRelease
 };

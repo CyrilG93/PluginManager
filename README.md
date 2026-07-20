@@ -110,7 +110,7 @@ GitHub Actions builds macOS `.dmg` and Windows `.exe` artifacts. Pushing a tag l
 
 Products are configured in `data/products.json`.
 
-Installed apps try to load the product catalog from the GitHub `main` branch first, then fall back to the bundled catalog if the computer is offline. This lets the product list change without asking users to reinstall Cyril Plugin Manager.
+Installed apps try to load the product catalog from the GitHub `main` branch first, then fall back to the bundled catalog if the computer is offline. Opening a Readme refreshes that catalog first, so a corrected documentation link applies immediately.
 
 Use `installMode: "script"` for simple releases that contain a platform installer script.
 Use `installMode: "manual"` for products that should download and open a package such as `.pkg`, `.exe` or `.ccx`.

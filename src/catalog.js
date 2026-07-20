@@ -1,8 +1,10 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const { githubJsonWithFallback } = require("./github");
 
 const CATALOG_PATH = path.join(__dirname, "..", "data", "products.json");
 const DEFAULT_REMOTE_CATALOG_URL = "https://raw.githubusercontent.com/CyrilG93/PluginManager/main/data/products.json";
+const GITHUB_CATALOG_ENDPOINT = "/repos/CyrilG93/PluginManager/contents/data/products.json?ref=main";
 let productCache = null;
 
 // Returns the remote catalog URL so future product list changes do not require app reinstall.
@@ -31,6 +33,34 @@ async function loadLocalProducts() {
   return validateProducts(JSON.parse(rawCatalog));
 }
 
+// Loads the GitHub raw catalog without reusing a stale HTTP cache entry.
+async function loadRemoteProducts() {
+  const response = await fetch(getRemoteCatalogUrl(), {
+    cache: "no-store",
+    headers: {
+      "Accept": "application/json",
+      "User-Agent": "CyrilPluginManager/0.1"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Remote catalog ${response.status}`);
+  }
+
+  return validateProducts(await response.json());
+}
+
+// Uses the authenticated GitHub API fallback when the raw catalog fetch is blocked locally.
+async function loadRemoteProductsWithGitHubFallback() {
+  const remoteFile = await githubJsonWithFallback(GITHUB_CATALOG_ENDPOINT);
+  if (remoteFile.encoding !== "base64" || !remoteFile.content) {
+    throw new Error("GitHub catalog content is unavailable.");
+  }
+
+  const catalogText = Buffer.from(remoteFile.content, "base64").toString("utf8");
+  return validateProducts(JSON.parse(catalogText));
+}
+
 // Loads the remote product catalog and falls back to the bundled catalog when offline.
 async function loadProducts(options = {}) {
   if (productCache && !options.force) {
@@ -38,28 +68,22 @@ async function loadProducts(options = {}) {
   }
 
   try {
-    const response = await fetch(getRemoteCatalogUrl(), {
-      headers: {
-        "Accept": "application/json",
-        "User-Agent": "CyrilPluginManager/0.1"
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Remote catalog ${response.status}`);
+    productCache = await loadRemoteProducts();
+    return productCache;
+  } catch (_rawCatalogError) {
+    try {
+      productCache = await loadRemoteProductsWithGitHubFallback();
+      return productCache;
+    } catch (_githubCatalogError) {
+      productCache = await loadLocalProducts();
+      return productCache;
     }
-
-    productCache = validateProducts(await response.json());
-    return productCache;
-  } catch (_error) {
-    productCache = await loadLocalProducts();
-    return productCache;
   }
 }
 
 // Finds one product from the active catalog by its stable internal id.
-async function getProductById(productId) {
-  const products = await loadProducts();
+async function getProductById(productId, options = {}) {
+  const products = await loadProducts(options);
   return products.find((product) => product.id === productId) || null;
 }
 
@@ -67,5 +91,7 @@ module.exports = {
   DEFAULT_REMOTE_CATALOG_URL,
   getProductById,
   loadLocalProducts,
+  loadRemoteProducts,
+  loadRemoteProductsWithGitHubFallback,
   loadProducts
 };
