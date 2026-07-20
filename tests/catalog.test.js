@@ -39,11 +39,27 @@ test("every catalog product exposes its public Readme page", async () => {
   );
 });
 
-test("Audio Separator exposes its test banner asset", async () => {
+test("every catalog product exposes its banner asset", async () => {
   const products = await loadLocalProducts();
-  const audioSeparator = products.find((product) => product.id === "premiere-audio-separator");
+  // Locks the product-to-banner mapping used by the detail panel.
+  const expectedBannerImages = new Map([
+    ["premiere-audio-separator", "AudioSeparatorBanner.jpg"],
+    ["premiere-beat-detector", "BeatDetectorBanner.jpg"],
+    ["premiere-database", "DataBaseBanner.jpg"],
+    ["premiere-export-button", "ExportButtonBanner.jpg"],
+    ["premiere-file-manager", "FileManagerBanner.jpg"],
+    ["premiere-grid-maker", "GridMakerBanner.jpg"],
+    ["premiere-sequence-renamer", "SequenceRenamerBanner.jpg"],
+    ["premiere-sub-creator", "SubCreatorBanner.jpg"],
+    ["premiere-time-tracker", "TimeTrackerBanner.jpg"],
+    ["premiere-toolbar", "Toolbar_Banner.jpg"],
+    ["premiere-youtube-downloader", "YoutubeDLBanner.jpg"]
+  ]);
 
-  assert.equal(audioSeparator.bannerImage, "AudioSeparatorBanner.jpg");
+  assert.deepEqual(
+    new Map(products.map((product) => [product.id, product.bannerImage])),
+    expectedBannerImages
+  );
 });
 
 test("Readme lookups force a refreshed remote catalog", async (t) => {

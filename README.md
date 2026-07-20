@@ -115,7 +115,7 @@ Installed apps try to load the product catalog from the GitHub `main` branch fir
 Use `installMode: "script"` for simple releases that contain a platform installer script.
 Use `installMode: "manual"` for products that should download and open a package such as `.pkg`, `.exe` or `.ccx`.
 For UXP products, `upiaNames` can list the display names returned by Adobe UPIA when they differ from the catalog product name.
-Use `readmeUrl` to show a Readme button that opens the product documentation page in the browser. Use an optional `bannerImage` filename from `assets/` to replace the product banner placeholder.
+Use `readmeUrl` to show a Readme button that opens the product documentation page in the browser. Each current product has a `bannerImage` filename from `assets/` for its detail banner.
 
 ## Changelog
 

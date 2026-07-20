@@ -32,8 +32,12 @@ test("packaging uses the CPT icon on macOS and Windows", () => {
 });
 
 test("packaging includes configured product banner assets", () => {
-  const bannerPath = path.join(projectRoot, "assets", "AudioSeparatorBanner.jpg");
+  const products = require("../data/products.json");
 
   assert.ok(packageConfig.build.files.includes("assets/**/*"));
-  assert.equal(fs.existsSync(bannerPath), true);
+  assert.ok(products.every((product) => product.bannerImage));
+  for (const product of products) {
+    const bannerPath = path.join(projectRoot, "assets", product.bannerImage);
+    assert.equal(fs.existsSync(bannerPath), true, `${product.name} banner should be packaged.`);
+  }
 });
