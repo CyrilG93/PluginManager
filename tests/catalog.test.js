@@ -16,9 +16,16 @@ test("Tool Bar installs automatically and exposes its Adobe UPIA name", async ()
   assert.deepEqual(toolBar.upiaNames, ["Tool Bar"]);
 });
 
-test("File Manager exposes its public Readme page", async () => {
+test("every catalog product exposes its public Readme page", async () => {
   const products = await loadLocalProducts();
-  const fileManager = products.find((product) => product.id === "premiere-file-manager");
 
-  assert.equal(fileManager.readmeUrl, "https://www.cyrilplugin.com/file-manager/readme");
+  assert.ok(products.every((product) => product.readmeUrl?.startsWith("https://www.cyrilplugin.com/")));
+  assert.ok(products.every((product) => product.readmeUrl?.endsWith("/readme")));
+});
+
+test("Audio Separator exposes its test banner asset", async () => {
+  const products = await loadLocalProducts();
+  const audioSeparator = products.find((product) => product.id === "premiere-audio-separator");
+
+  assert.equal(audioSeparator.bannerImage, "AudioSeparatorBanner.jpg");
 });

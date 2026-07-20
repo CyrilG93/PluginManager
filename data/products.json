@@ -7,6 +7,7 @@
     "kind": "CEP",
     "installMode": "script",
     "bundleIds": ["com.antigravity.beatdetector"],
+    "readmeUrl": "https://www.cyrilplugin.com/beatdetector/readme",
     "description": "Detects beats and prepares timeline markers from audio."
   },
   {
@@ -17,6 +18,7 @@
     "kind": "CEP",
     "installMode": "script",
     "bundleIds": ["com.database.premiere"],
+    "readmeUrl": "https://www.cyrilplugin.com/database/readme",
     "description": "Manages reusable Premiere Pro project databases."
   },
   {
@@ -27,6 +29,7 @@
     "kind": "CEP",
     "installMode": "script",
     "bundleIds": ["com.cyrilg93.exportbutton"],
+    "readmeUrl": "https://www.cyrilplugin.com/exportbutton/readme",
     "description": "Adds a compact export launcher inside Premiere Pro."
   },
   {
@@ -48,6 +51,7 @@
     "kind": "CEP",
     "installMode": "script",
     "bundleIds": ["com.cascade.premiere.gridmaker"],
+    "readmeUrl": "https://www.cyrilplugin.com/gridmaker/readme",
     "description": "Builds and edits grid layouts for Premiere Pro."
   },
   {
@@ -58,6 +62,7 @@
     "kind": "CEP",
     "installMode": "script",
     "bundleIds": ["com.avsupport.sequencerenamer"],
+    "readmeUrl": "https://www.cyrilplugin.com/sequencerenamer/readme",
     "description": "Renames Premiere sequences with repeatable rules."
   },
   {
@@ -68,6 +73,7 @@
     "kind": "CEP",
     "installMode": "script",
     "bundleIds": ["com.cyrilg93.timetracker"],
+    "readmeUrl": "https://www.cyrilplugin.com/timetracker/readme",
     "description": "Tracks editing time from inside Premiere Pro."
   },
   {
@@ -78,6 +84,8 @@
     "kind": "CEP",
     "installMode": "manual",
     "bundleIds": ["com.audioseparator"],
+    "readmeUrl": "https://www.cyrilplugin.com/audioseparator/readme",
+    "bannerImage": "AudioSeparatorBanner.jpg",
     "description": "Separates vocals, drums, bass and other stems with a private runtime."
   },
   {
@@ -88,6 +96,7 @@
     "kind": "CEP",
     "installMode": "manual",
     "bundleIds": ["com.cyrilplugin.SubCreator"],
+    "readmeUrl": "https://www.cyrilplugin.com/subcreator/readme",
     "description": "Creates subtitles and styled captions with packaged runtimes."
   },
   {
@@ -99,6 +108,7 @@
     "installMode": "script",
     "bundleIds": ["com.cyrilplugin.toolbar"],
     "upiaNames": ["Tool Bar"],
+    "readmeUrl": "https://www.cyrilplugin.com/toolbar/readme",
     "description": "Adds a customizable UXP toolbar for common Premiere actions."
   },
   {
@@ -109,6 +119,7 @@
     "kind": "CEP",
     "installMode": "manual",
     "bundleIds": ["com.youtubedownloader.premiere"],
+    "readmeUrl": "https://www.cyrilplugin.com/youtubedownloader/readme",
     "description": "Downloads and converts YouTube media for Premiere workflows."
   }
 ]

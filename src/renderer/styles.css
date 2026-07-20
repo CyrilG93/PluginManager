@@ -327,12 +327,8 @@ input {
 }
 
 .detail-banner {
-  display: grid;
-  align-content: center;
-  justify-items: start;
-  gap: 7px;
-  min-height: 174px;
-  padding: 24px;
+  aspect-ratio: 247 / 100;
+  overflow: hidden;
   border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(43, 184, 168, 0.22), rgba(138, 111, 209, 0.2)),
@@ -343,7 +339,24 @@ input {
   color: var(--text);
 }
 
-.detail-banner span {
+.detail-banner-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-banner-placeholder {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  align-content: center;
+  justify-items: start;
+  gap: 7px;
+  padding: 24px;
+}
+
+.detail-banner-placeholder span {
   color: var(--accent);
   font-size: 13px;
   font-weight: 800;
@@ -351,11 +364,11 @@ input {
   text-transform: uppercase;
 }
 
-.detail-banner strong {
+.detail-banner-placeholder strong {
   font-size: 24px;
 }
 
-.detail-banner small {
+.detail-banner-placeholder small {
   color: var(--muted);
   font-size: 13px;
 }

@@ -12,7 +12,7 @@ It reads the latest GitHub release for each product, then:
 - installs the stable GitHub release when the Install, Update or Reinstall action is used for an automatic product
 - checks for a newer Plugin Manager release at startup and displays an update banner
 - uninstalls detected CEP/UXP extension folders
-- opens a configured product Readme page in the browser
+- opens the product Readme page in the browser
 
 GitHub is checked at startup, when using the global refresh button, when refreshing one product with right-click, and when an install needs release data that is not already cached. Every product refresh also rescans the installed version, so a right-click immediately corrects stale local status.
 
@@ -115,7 +115,7 @@ Installed apps try to load the product catalog from the GitHub `main` branch fir
 Use `installMode: "script"` for simple releases that contain a platform installer script.
 Use `installMode: "manual"` for products that should download and open a package such as `.pkg`, `.exe` or `.ccx`.
 For UXP products, `upiaNames` can list the display names returned by Adobe UPIA when they differ from the catalog product name.
-Use an optional `readmeUrl` to show a Readme button that opens the product documentation page in the browser.
+Use `readmeUrl` to show a Readme button that opens the product documentation page in the browser. Use an optional `bannerImage` filename from `assets/` to replace the product banner placeholder.
 
 ## Changelog
 

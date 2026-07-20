@@ -30,3 +30,10 @@ test("packaging uses the CPT icon on macOS and Windows", () => {
   assert.equal(size.width, size.height);
   assert.ok(size.width >= 512);
 });
+
+test("packaging includes configured product banner assets", () => {
+  const bannerPath = path.join(projectRoot, "assets", "AudioSeparatorBanner.jpg");
+
+  assert.ok(packageConfig.build.files.includes("assets/**/*"));
+  assert.equal(fs.existsSync(bannerPath), true);
+});

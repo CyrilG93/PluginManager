@@ -42,11 +42,14 @@
       </section>
 
       <section class="detail-pane" aria-label="Détail produit">
-        <!-- Replace this placeholder with the approved banner image when it is provided. -->
-        <div class="detail-banner" role="img" aria-label="Emplacement réservé pour la bannière Cyril Plugin">
-          <span>Cyril Plugin</span>
-          <strong>Banner placeholder</strong>
-          <small>Your visual will appear here.</small>
+        <!-- Shows configured product artwork and keeps a placeholder for products without a banner yet. -->
+        <div class="detail-banner">
+          <img class="detail-banner-image" id="detailBannerImage" alt="" hidden />
+          <div class="detail-banner-placeholder" id="detailBannerPlaceholder">
+            <span>Cyril Plugin</span>
+            <strong>Banner placeholder</strong>
+            <small>Your visual will appear here.</small>
+          </div>
         </div>
 
         <div class="detail-actions">

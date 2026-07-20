@@ -37,6 +37,8 @@ const uninstallAction = document.getElementById("uninstallAction");
 const betaAction = document.getElementById("betaAction");
 const compatibilityPanel = document.getElementById("compatibilityPanel");
 const statusPanel = document.getElementById("statusPanel");
+const detailBannerImage = document.getElementById("detailBannerImage");
+const detailBannerPlaceholder = document.getElementById("detailBannerPlaceholder");
 const detailName = document.getElementById("detailName");
 const detailVersion = document.getElementById("detailVersion");
 const detailKind = document.getElementById("detailKind");
@@ -227,6 +229,8 @@ function renderDetails() {
   if (!product) {
     primaryAction.disabled = true;
     uninstallAction.disabled = true;
+    detailBannerImage.hidden = true;
+    detailBannerPlaceholder.hidden = false;
     compatibilityPanel.hidden = true;
     statusPanel.hidden = true;
     return;
@@ -237,7 +241,18 @@ function renderDetails() {
   const installedVersion = product.installed?.installedVersion;
   const updateAvailable = hasStableUpdate(product);
   const betaUpdateAvailable = hasBetaUpdate(product);
+  const hasBannerImage = Boolean(product.bannerImage);
 
+  // Switches between configured product artwork and the standard banner placeholder.
+  detailBannerImage.hidden = !hasBannerImage;
+  detailBannerPlaceholder.hidden = hasBannerImage;
+  if (hasBannerImage) {
+    detailBannerImage.src = `../../assets/${encodeURIComponent(product.bannerImage)}`;
+    detailBannerImage.alt = `${product.name} banner`;
+  } else {
+    detailBannerImage.removeAttribute("src");
+    detailBannerImage.alt = "";
+  }
   detailName.textContent = product.name;
   detailVersion.textContent = release?.version ? `v. ${release.version}` : "-";
   detailKind.textContent = product.kind;
