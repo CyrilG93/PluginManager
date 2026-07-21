@@ -9,6 +9,7 @@ It reads the latest GitHub release for each product, then:
 - downloads `.pkg`, `.exe`, `.ccx` or `.zxp` installers into `Downloads/Cyril Plugin Manager`, then opens them automatically with the system installer
 - detects installed CEP/UXP extensions from common Adobe folders, with Adobe UPIA as a fallback for managed UXP installs
 - highlights stable updates and changes the Beta version colour only when the platform-specific beta package is newer than the installed plugin
+- keeps the Beta version readable when a selected product already has the same or a newer installed Beta
 - installs the stable GitHub release when the Install, Update or Reinstall action is used for an automatic product
 - checks for a newer Plugin Manager release at startup and displays an update banner
 - uninstalls detected CEP/UXP extension folders while keeping local preferences and data

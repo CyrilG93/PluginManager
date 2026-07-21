@@ -265,6 +265,12 @@ input {
   color: var(--muted);
 }
 
+/* Keep an existing Beta version readable on the teal selected-row background. */
+.product-row.active .version-cell.beta {
+  color: #071615;
+  opacity: 0.82;
+}
+
 .product-row.beta-update-available .version-cell.beta {
   color: var(--warning);
   font-weight: 800;
