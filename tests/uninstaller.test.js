@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
-const { uninstallProduct } = require("../src/uninstaller");
+const { isPermissionError, isSystemExtensionPath, uninstallProduct } = require("../src/uninstaller");
 
 const product = {
   id: "example",
@@ -38,4 +38,17 @@ test("uninstallProduct removes matching extension folders only", async () => {
     installedPath: null,
     installedVersion: null
   });
+});
+
+test("isPermissionError only retries Windows and macOS permission denials", () => {
+  assert.equal(isPermissionError({ code: "EPERM" }), true);
+  assert.equal(isPermissionError({ code: "EACCES" }), true);
+  assert.equal(isPermissionError({ code: "ENOENT" }), false);
+});
+
+test("isSystemExtensionPath never elevates an extension inside the current user profile", () => {
+  const userExtension = path.join(os.homedir(), "Library", "Application Support", "Adobe", "CEP", "extensions", "com.example.plugin");
+
+  assert.equal(isSystemExtensionPath(userExtension, "darwin"), false);
+  assert.equal(isSystemExtensionPath("/Library/Application Support/Adobe/CEP/extensions/com.example.plugin", "darwin"), true);
 });

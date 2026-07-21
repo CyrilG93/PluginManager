@@ -11,7 +11,7 @@ It reads the latest GitHub release for each product, then:
 - highlights stable updates and changes the Beta version colour only when the platform-specific beta package is newer than the installed plugin
 - installs the stable GitHub release when the Install, Update or Reinstall action is used for an automatic product
 - checks for a newer Plugin Manager release at startup and displays an update banner
-- uninstalls detected CEP/UXP extension folders
+- uninstalls detected CEP/UXP extension folders while keeping local preferences and data
 - opens the product Readme page in the browser
 
 GitHub is checked at startup, when using the global refresh button, when refreshing one product with right-click, and when an install needs release data that is not already cached. Every product refresh also rescans the installed version, so a right-click immediately corrects stale local status.

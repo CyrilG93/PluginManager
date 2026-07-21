@@ -293,7 +293,11 @@ ipcMain.handle("products:uninstall", async (_event, productId) => {
 
   return {
     ...result,
-    message: result.removed.length > 0 ? "Plugin uninstalled." : "No installed copy was detected."
+    message: result.removed.length > 0
+      ? result.elevated.length > 0
+        ? "Plugin uninstalled. Administrator permission was used for the system copy."
+        : "Plugin uninstalled. Your local preferences were kept."
+      : "No installed copy was detected."
   };
 });
 

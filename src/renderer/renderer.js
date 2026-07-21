@@ -390,7 +390,7 @@ async function uninstallSelectedProduct() {
     return;
   }
 
-  if (!window.confirm(`Uninstall ${product.name}?`)) {
+  if (!window.confirm(`Uninstall ${product.name}?\n\nYour local preferences will be kept. Administrator permission may be requested for an all-users installation.`)) {
     return;
   }
 
