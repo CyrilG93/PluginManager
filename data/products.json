@@ -85,8 +85,8 @@
   },
   {
     "id": "premiere-audio-separator",
-    "name": "Premiere Pro Audio Separator",
-    "repository": "CyrilG93/PremierePro-AudioSeparator",
+    "name": "Premiere Audio Separator",
+    "repository": "CyrilG93/PremiereAudioSeparator",
     "host": "Premiere Pro",
     "kind": "CEP",
     "installMode": "manual",
