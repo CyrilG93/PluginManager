@@ -163,10 +163,13 @@ function getPrimaryActionLabel(product) {
 function getVisibleProducts() {
   const query = state.query.trim().toLowerCase();
 
-  return state.products.filter((product) => !query || [product.name, product.host, product.kind]
-    .join(" ")
-    .toLowerCase()
-    .includes(query));
+  // Sort a copy so the visible list stays alphabetical even when the remote catalog order changes.
+  return state.products
+    .filter((product) => !query || [product.name, product.host, product.kind]
+      .join(" ")
+      .toLowerCase()
+      .includes(query))
+    .toSorted((left, right) => left.name.localeCompare(right.name, undefined, { sensitivity: "base" }));
 }
 
 // Renders the product table rows.

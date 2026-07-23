@@ -8,6 +8,7 @@ It reads the latest GitHub release for each product, then:
 - displays background installer output inside the Status / Logs panel instead of opening a Terminal window
 - downloads `.pkg`, `.exe`, `.ccx` or `.zxp` installers into `Downloads/Cyril Plugin Manager`, then opens them automatically with the system installer
 - detects installed CEP/UXP extensions from common Adobe folders, with Adobe UPIA as a fallback for managed UXP installs
+- displays products in alphabetical order, including after a catalog refresh or search
 - highlights stable updates and changes the Beta version colour only when the platform-specific beta package is newer than the installed plugin
 - keeps the Beta version readable when a selected product already has the same or a newer installed Beta
 - installs the stable GitHub release when the Install, Update or Reinstall action is used for an automatic product
